@@ -1,30 +1,30 @@
 package gameserver
+
 import (
-	"github.com/bianchengxiaobei/cmgo/network"
+	"cmgameserver/msgHandler"
 	"errors"
 	"github.com/bianchengxiaobei/cmgo/log4g"
-	"cmgameserver/msgHandler"
+	"github.com/bianchengxiaobei/cmgo/network"
 )
 
 type ServerMessageHandler struct {
-	server network.ISocket
 	gameServer *GameServer
-	pool	*HandlerPool
+	pool       *HandlerPool
 }
 
-func (handler ServerMessageHandler)Init()  {
-	handler.pool.Register(10001,&msgHandler.LoginToGameServerHandler{GameServer:handler.gameServer})
+func (handler ServerMessageHandler) Init() {
+	handler.pool.Register(10001, &msgHandler.LoginToGameServerHandler{GameServer: handler.gameServer})
 }
 func (handler ServerMessageHandler) MessageReceived(session network.SocketSessionInterface, message interface{}) error {
-	if writeMsg,ok := message.(network.WriteMessage);!ok{
+	if writeMsg, ok := message.(network.WriteMessage); !ok {
 		return errors.New("不是WriteMessage类型")
-	}else{
-		log4g.Infof("收到消息%d",writeMsg.MsgId)
+	} else {
+		log4g.Infof("收到消息%d", writeMsg.MsgId)
 		msgHandler := handler.pool.GetHandler(int32(writeMsg.MsgId))
-		if msgHandler == nil{
-			log4g.Errorf("不存在该消息[%d]的处理器",writeMsg.MsgId)
-		}else{
-			msgHandler.Action(session,writeMsg.MsgData)
+		if msgHandler == nil {
+			log4g.Errorf("不存在该消息[%d]的处理器", writeMsg.MsgId)
+		} else {
+			msgHandler.Action(session, writeMsg.MsgData)
 		}
 	}
 	return nil
