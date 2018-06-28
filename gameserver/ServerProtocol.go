@@ -22,6 +22,7 @@ var messageHeaderLen = (int32)(unsafe.Sizeof(MessageHeader{}))
 func (protocol ServerProtocol) Init(){
 	//注册消息
 	protocol.pool.Register(10000,reflect.TypeOf(message.M2G_RegisterGate{}))
+	protocol.pool.Register(10001,reflect.TypeOf(message.G2M_LoginToGameServer{}))
 }
 func (protocol ServerProtocol) Decode(session network.SocketSessionInterface, data []byte)(interface{},int,error){
 	var (
@@ -43,15 +44,15 @@ func (protocol ServerProtocol) Decode(session network.SocketSessionInterface, da
 	if int32(ioBuffer.Len()) < allLen{
 		return nil,0,nil
 	}
-	var perOrder = session.GetAttribute(network.PreOrderId)
+	var perOrder = session.GetAttribute(network.PREORDERID)
 	if perOrder == nil{
-		session.SetAttribute(network.PreOrderId,msgHeader.OrderId+1)
+		session.SetAttribute(network.PREORDERID,msgHeader.OrderId+1)
 		//if msgHeader.OrderId == 0{
 		//	fmt.Println("用户客户端发送消息序列成功")
 		//}
 	}else{
 		if msgHeader.OrderId == perOrder{
-			session.SetAttribute(network.PreOrderId,msgHeader.OrderId+1)
+			session.SetAttribute(network.PREORDERID,msgHeader.OrderId+1)
 		}else {
 			log4g.Error("发送消息序列出错")
 			return nil, 0, nil
@@ -59,7 +60,7 @@ func (protocol ServerProtocol) Decode(session network.SocketSessionInterface, da
 	}
 	var msgType = protocol.pool.GetMessageType(msgHeader.MessageId)
 	msg := reflect.New(msgType.Elem()).Interface()
-	proto.Unmarshal(ioBuffer.Next(int(msgHeader.MsgBodyLen)),msg.(proto.Message))
+	proto.Unmarshal(ioBuffer.Bytes(),msg.(proto.Message))
 	chanMsg = network.WriteMessage{
 		MsgId:int(msgHeader.MessageId),
 		MsgData:msg,

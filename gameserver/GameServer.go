@@ -8,7 +8,6 @@ import (
 	"io/ioutil"
 	"reflect"
 	"github.com/bianchengxiaobei/cmgo/log4g"
-	"cmgameserver/message"
 	"github.com/json-iterator/go"
 )
 
@@ -194,8 +193,8 @@ func (server *GameServer) LoadBaseConfig(filePath string) {
 }
 func (server *GameServer)RegisterGate(gateId int)  {
 	//发送给网关服务器注册自己
-	message := &message.M2G_RegisterGate{
+	message := &message2.M2G_RegisterGate{
 		Id:server.gameConfig.Id,
 	}
-	server.GameClientServer[gateId].Session.WriteMsg(10000,message,1e8)
+	server.GameClientServer[gateId].Session.WriteMsg(10000,message)
 }
