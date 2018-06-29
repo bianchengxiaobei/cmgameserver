@@ -10,6 +10,9 @@ import (
 	"path/filepath"
 	"reflect"
 	"cmgameserver/message"
+	"github.com/bianchengxiaobei/cmgo/db"
+	"cmgameserver/roleManager"
+	"github.com/golang/protobuf/proto"
 )
 
 type GameServer struct {
@@ -18,6 +21,8 @@ type GameServer struct {
 	GameClientServer      map[int]*network.TcpClient
 	gameBaseConfigPath    string
 	gameSessionConfigPath string
+	DBManager				*db.MongoBDManager
+	RoleManager				*roleManager.RoleManager
 }
 type GameBaseConfig struct {
 	Name                 string
@@ -63,11 +68,14 @@ func (server *GameServer) Init(gameBaseConfig string, gameSessionConfig string) 
 			handlers:make(map[int32]HandlerBase),
 		},
 	}
+	serverHandler.Init()
 	for id, _ := range server.gameConfig.GateConnectConfigMap {
 		server.GameClientServer[id] = network.NewTcpClient("tcp", &gameConfig)
 		server.GameClientServer[id].SetProtocolCodec(serverCodec)
 		server.GameClientServer[id].SetMessageHandler(serverHandler)
 	}
+	server.DBManager = db.NewMongoBD("127.0.0.1",5)
+	server.RoleManager = roleManager.NewRoleManager(server.DBManager)
 }
 func (server *GameServer) Run() {
 	defer func() {
@@ -202,5 +210,25 @@ func (server *GameServer) RegisterGate(gateId int) {
 	message := &message.M2G_RegisterGate{
 		Id: server.gameConfig.Id,
 	}
-	server.GameClientServer[gateId].Session.WriteMsg(10000, message)
+	innerMsg := network.InnerWriteMessage{
+		RoleId:0,
+		MsgData:message,
+	}
+	server.GameClientServer[gateId].Session.WriteMsg(10000, innerMsg)
+}
+func (server *GameServer)GetId() int32{
+	return server.gameConfig.Id
+}
+func (server *GameServer)GetDBManager() *db.MongoBDManager{
+	return server.DBManager
+}
+func (server *GameServer)GetRoleManager() *roleManager.RoleManager{
+	return server.RoleManager
+}
+func (server *GameServer)WriteInnerMsg(session network.SocketSessionInterface,roleId int64,msgId int,msg proto.Message){
+	innerMsg := network.InnerWriteMessage{
+		RoleId:roleId,
+		MsgData:msg,
+	}
+	session.WriteMsg(msgId,innerMsg)
 }

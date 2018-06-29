@@ -14,6 +14,7 @@ type ServerMessageHandler struct {
 
 func (handler ServerMessageHandler) Init() {
 	handler.pool.Register(10001, &msgHandler.LoginToGameServerHandler{GameServer: handler.gameServer})
+	handler.pool.Register(10003,&msgHandler.RoleRegisterGateHandler{GameServer:handler.gameServer})
 }
 func (handler ServerMessageHandler) MessageReceived(session network.SocketSessionInterface, message interface{}) error {
 	if writeMsg, ok := message.(network.WriteMessage); !ok {

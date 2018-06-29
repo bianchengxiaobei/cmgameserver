@@ -9,74 +9,76 @@ import (
 	"github.com/golang/protobuf/proto"
 	"reflect"
 	"unsafe"
+	"fmt"
 )
 
 type ServerProtocol struct {
 	pool *ProtoMessagePool
 }
-type MessageHeader struct {
+type InnerMessageHeader struct {
 	MsgBodyLen int32
 	MessageId  int32
-	OrderId    int32
+	RoleId     int64
 }
 
-var messageHeaderLen = (int32)(unsafe.Sizeof(MessageHeader{}))
+var InnerMessageHeaderLen = (int)(unsafe.Sizeof(InnerMessageHeader{}))
 
 func (protocol ServerProtocol) Init() {
 	//注册消息
 	protocol.pool.Register(10000, reflect.TypeOf(message.M2G_RegisterGate{}))
 	protocol.pool.Register(10001, reflect.TypeOf(message.G2M_LoginToGameServer{}))
+	protocol.pool.Register(10002,reflect.TypeOf(message.M2G_LoginSuccessNotifyGate{}))
+	protocol.pool.Register(10003,reflect.TypeOf(message.G2M_RoleRegisterToGateSuccess{}))
 }
 func (protocol ServerProtocol) Decode(session network.SocketSessionInterface, data []byte) (interface{}, int, error) {
 	var (
 		err       error
 		ioBuffer  *bytes.Buffer
-		msgHeader MessageHeader
+		msgHeader InnerMessageHeader
 		chanMsg   network.WriteMessage
+		innerMsg  network.InnerWriteMessage
 	)
-	msgHeader = MessageHeader{}
+	msgHeader = InnerMessageHeader{}
 	ioBuffer = bytes.NewBuffer(data)
-	if int32(ioBuffer.Len()) < messageHeaderLen {
+	if ioBuffer.Len() < InnerMessageHeaderLen {
 		return nil, 0, nil
 	}
 	err = binary.Read(ioBuffer, binary.LittleEndian, &msgHeader)
 	if err != nil {
 		return nil, 0, err
 	}
-	if int32(ioBuffer.Len()) < msgHeader.MsgBodyLen {
+	if ioBuffer.Len() < int(msgHeader.MsgBodyLen) {
 		return nil, 0, nil
 	}
-	allLen := msgHeader.MsgBodyLen + messageHeaderLen
-	var perOrder = session.GetAttribute(network.PREORDERID)
-	if perOrder == nil {
-		session.SetAttribute(network.PREORDERID, msgHeader.OrderId+1)
-		//if msgHeader.OrderId == 0{
-		//	fmt.Println("用户客户端发送消息序列成功")
-		//}
-	} else {
-		if msgHeader.OrderId == perOrder {
-			session.SetAttribute(network.PREORDERID, msgHeader.OrderId+1)
-		} else {
-			log4g.Error("发送消息序列出错")
-			return nil, 0, nil
-		}
-	}
+	allLen := int(msgHeader.MsgBodyLen) + InnerMessageHeaderLen
+
 	var msgType = protocol.pool.GetMessageType(msgHeader.MessageId)
-	msg := reflect.New(msgType.Elem()).Interface()
-	proto.Unmarshal(ioBuffer.Bytes(), msg.(proto.Message))
-	chanMsg = network.WriteMessage{
-		MsgId:   int(msgHeader.MessageId),
+	if msgType == nil{
+		fmt.Println(msgHeader.MessageId)
+	}
+	msg := reflect.New(msgType).Interface()
+	err = proto.Unmarshal(ioBuffer.Bytes(), msg.(proto.Message))
+	if err != nil {
+		log4g.Error(err.Error())
+	}
+	innerMsg = network.InnerWriteMessage{
+		RoleId:  msgHeader.RoleId,
 		MsgData: msg,
 	}
-	return chanMsg, int(allLen), nil
+	chanMsg = network.WriteMessage{
+		MsgId:   int(msgHeader.MessageId),
+		MsgData: innerMsg,
+	}
+	return chanMsg, allLen, nil
 }
 func (protocol ServerProtocol) Encode(session network.SocketSessionInterface, writeMsg interface{}) error {
 	var (
 		err       error
 		ioBuffer  *bytes.Buffer
-		msgHeader MessageHeader
+		msgHeader InnerMessageHeader
 		ok        bool
 		msg       network.WriteMessage
+		innerMsg  network.InnerWriteMessage
 		protoMsg  proto.Message
 		data      []byte
 	)
@@ -84,10 +86,16 @@ func (protocol ServerProtocol) Encode(session network.SocketSessionInterface, wr
 	if ok == false {
 		panic("Message != WriteMsg")
 	}
+	if innerMsg, ok = msg.MsgData.(network.InnerWriteMessage); !ok {
+		panic("Message != InnerMsg")
+		return nil
+	}
+	msgHeader = InnerMessageHeader{}
 	msgHeader.MessageId = int32(msg.MsgId)
 
-	msgHeader.OrderId = 0
-	protoMsg, ok = msg.MsgData.(proto.Message)
+	msgHeader.RoleId = innerMsg.RoleId
+
+	protoMsg, ok = innerMsg.MsgData.(proto.Message)
 	if ok == false {
 		panic("Msg != ProtoMessage")
 	}
