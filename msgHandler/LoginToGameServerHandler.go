@@ -4,10 +4,11 @@ import (
 	"cmgameserver/message"
 	"github.com/bianchengxiaobei/cmgo/network"
 	"github.com/bianchengxiaobei/cmgo/log4g"
+	"cmgameserver/face"
 )
 
 type LoginToGameServerHandler struct {
-	GameServer IGameServer
+	GameServer face.IGameServer
 }
 
 func (handler *LoginToGameServerHandler) Action(session network.SocketSessionInterface, msg interface{}) {
@@ -24,13 +25,13 @@ func (handler *LoginToGameServerHandler) Action(session network.SocketSessionInt
 				}
 			}
 			//初始化在线角色
-			onlineRole.GateId = protoMsg.GateId
-			onlineRole.UserName = protoMsg.UserName
-
+			onlineRole.SetGateId(protoMsg.GateId)
+			onlineRole.SetUseName(protoMsg.UserName)
+			onlineRole.SetGateSession(session)
 			roleManager.AddOnlineRole(onlineRole)
 			//通知网关服务器登录游戏逻辑服成功
 			rMsg := new(message.M2G_LoginSuccessNotifyGate)
-			rMsg.RoleId = onlineRole.Role.RoleId
+			rMsg.RoleId = onlineRole.GetRoleId()
 			rMsg.UserId = protoMsg.UserId
 			rMsg.ServerId = protoMsg.ServerId
 			handler.GameServer.WriteInnerMsg(session,0,10002,rMsg)

@@ -1,8 +1,7 @@
-package msgHandler
+package face
 
 import (
 	"github.com/bianchengxiaobei/cmgo/db"
-	"cmgameserver/roleManager"
 	"github.com/bianchengxiaobei/cmgo/network"
 	"github.com/golang/protobuf/proto"
 )
@@ -10,6 +9,8 @@ import (
 type IGameServer interface {
 	GetId() int32
 	GetDBManager() *db.MongoBDManager
-	GetRoleManager() *roleManager.RoleManager
+	GetRoleManager() IRoleManager
+	GetRoomManager() IRoomManager
+	GetBattleManager() IBattleManager
 	WriteInnerMsg(session network.SocketSessionInterface,roleId int64,msgId int,msg proto.Message)
 }

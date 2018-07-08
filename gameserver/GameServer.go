@@ -13,6 +13,9 @@ import (
 	"github.com/bianchengxiaobei/cmgo/db"
 	"cmgameserver/roleManager"
 	"github.com/golang/protobuf/proto"
+	"cmgameserver/roomManager"
+	"cmgameserver/face"
+	"cmgameserver/battleManager"
 )
 
 type GameServer struct {
@@ -22,7 +25,9 @@ type GameServer struct {
 	gameBaseConfigPath    string
 	gameSessionConfigPath string
 	DBManager				*db.MongoBDManager
-	RoleManager				*roleManager.RoleManager
+	RoleManager				face.IRoleManager
+	RoomManager				face.IRoomManager
+	BattleManager			face.IBattleManager
 }
 type GameBaseConfig struct {
 	Name                 string
@@ -75,7 +80,9 @@ func (server *GameServer) Init(gameBaseConfig string, gameSessionConfig string) 
 		server.GameClientServer[id].SetMessageHandler(serverHandler)
 	}
 	server.DBManager = db.NewMongoBD("127.0.0.1",5)
-	server.RoleManager = roleManager.NewRoleManager(server.DBManager)
+	server.RoleManager = roleManager.NewRoleManager(server)
+	server.RoomManager = roomManager.NewRoomManager(server)
+	server.BattleManager = battleManager.NewBattleManager(server)
 }
 func (server *GameServer) Run() {
 	defer func() {
@@ -211,7 +218,7 @@ func (server *GameServer) RegisterGate(gateId int) {
 		Id: server.gameConfig.Id,
 	}
 	innerMsg := network.InnerWriteMessage{
-		RoleId:0,
+		//RoleId:make([]int64,0),
 		MsgData:message,
 	}
 	server.GameClientServer[gateId].Session.WriteMsg(10000, innerMsg)
@@ -222,13 +229,19 @@ func (server *GameServer)GetId() int32{
 func (server *GameServer)GetDBManager() *db.MongoBDManager{
 	return server.DBManager
 }
-func (server *GameServer)GetRoleManager() *roleManager.RoleManager{
+func (server *GameServer)GetRoleManager() face.IRoleManager{
 	return server.RoleManager
+}
+func (server *GameServer)GetRoomManager() face.IRoomManager {
+	return server.RoomManager
+}
+func (server *GameServer)GetBattleManager() face.IBattleManager{
+	return server.BattleManager
 }
 func (server *GameServer)WriteInnerMsg(session network.SocketSessionInterface,roleId int64,msgId int,msg proto.Message){
 	innerMsg := network.InnerWriteMessage{
-		RoleId:roleId,
 		MsgData:msg,
 	}
+	innerMsg.RoleId = roleId
 	session.WriteMsg(msgId,innerMsg)
 }
