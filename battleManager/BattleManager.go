@@ -34,6 +34,7 @@ func (battleManager *BattleManager) CreateBattle(roles [4]face.IOnlineRole) face
 		timer:    time.NewTicker(80 * time.Millisecond),
 		players:  roles,
 		msg:      new(message.M2C_BattleFrame),
+		frameCache:make(map[int32][]*message.Command),
 		GameServer:battleManager.GameServer,
 	}
 	battle.msg.Cmd = make([]*message.Command,0)

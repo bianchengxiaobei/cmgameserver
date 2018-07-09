@@ -19,6 +19,8 @@ func (handler *ReqCommandHandler) Action(session network.SocketSessionInterface,
 				battle := handler.GameServer.GetBattleManager().GetBattle(battleId)
 				if battle != nil{
 					battle.AddFrameCommand(protoMsg.Cmd.PlayerId,protoMsg.Cmd.CommandType,protoMsg.Cmd.Param)
+				}else{
+					log4g.Infof("不存在该战斗:[%d]",battleId)
 				}
 			}else{
 				log4g.Infof("战斗Id无效:[%d]",battleId)

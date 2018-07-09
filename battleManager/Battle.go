@@ -5,6 +5,7 @@ import (
 	"cmgameserver/message"
 	"time"
 	"sync"
+	"github.com/bianchengxiaobei/cmgo/log4g"
 )
 
 type Battle struct {
@@ -13,11 +14,10 @@ type Battle struct {
 	timer        *time.Ticker
 	state        face.BattleState
 	FrameCount   int32
-	CommandIndex int
 	msg          *message.M2C_BattleFrame
 	players      [4]face.IOnlineRole
 	GameServer   face.IGameServer
-	CacheCommand [4]message.Command
+	frameCache	map[int32][]*message.Command
 	sync.RWMutex
 }
 
@@ -65,28 +65,36 @@ func (battle *Battle) CalculateAward() {
 
 }
 func (battle *Battle) AddFrameCommand(playerId int32, cmdType int32, param string) {
-	battle.Lock()
-	defer battle.Unlock()
+	battle.RLock()
+	defer battle.RUnlock()
 	var cmd *message.Command
 	//如果已经存在，直接修改
-	cmd = &battle.CacheCommand[battle.CommandIndex]
+	cmd = new(message.Command)
 	cmd.PlayerId = playerId
 	cmd.CommandType = cmdType
 	cmd.Param = param
-	battle.CommandIndex++
-	battle.msg.Cmd = append(battle.msg.Cmd, cmd)
+	battle.frameCache[battle.FrameCount] = append(battle.frameCache[battle.FrameCount],cmd)
+	log4g.Infof("f1111:%d",battle.FrameCount)
 }
 func (battle *Battle) BattleLoop() {
+	var cmdLen int
+	cmdLen = len(battle.msg.Cmd)
+	if cmdLen > 0{
+		battle.msg.Cmd = battle.msg.Cmd[cmdLen:]
+	}
 	//发送当前帧给房间内所有玩家
 	battle.msg.FrameCount = battle.FrameCount
+	cmd := battle.frameCache[battle.FrameCount]
+	if cmd != nil && len(cmd) > 0{
+		log4g.Info("fewfee")
+		battle.msg.Cmd = cmd
+	}
 	for _, v := range battle.players {
 		if v != nil {
 			battle.GameServer.WriteInnerMsg(v.GetGateSession(), v.GetRoleId(), 5012, battle.msg)
 		}
 	}
 	battle.Lock()
-	battle.msg.Cmd = battle.msg.Cmd[battle.CommandIndex:]
-	battle.CommandIndex = 0
-	battle.Unlock()
 	battle.FrameCount++
+	battle.Unlock()
 }
