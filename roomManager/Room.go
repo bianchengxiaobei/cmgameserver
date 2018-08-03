@@ -118,6 +118,14 @@ func (room *Room) LeaveOneMember(roleId int64) bool{
 		return true
 	}
 }
+//是否是房主
+func (room *Room)IsRoomOwner(roleId int64)bool{
+	if room.RoomOwnerId == roleId{
+		return true
+	}else{
+		return false
+	}
+}
 func (room *Room)GetRoomRoleIds() [4]int64{
 	room.RLock()
 	defer room.RUnlock()

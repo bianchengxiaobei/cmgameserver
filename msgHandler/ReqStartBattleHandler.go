@@ -27,6 +27,8 @@ func (handler *ReqStartBattleHandler) Action(session network.SocketSessionInterf
 							if v > 0{
 								role := handler.GameServer.GetRoleManager().GetOnlineRole(v)
 								if role != nil && role.IsConnected(){
+									role.SetInRooming(false)
+									role.SetInBattling(true)
 									handler.GameServer.WriteInnerMsg(role.GetGateSession(),v,5009,rMsg)
 								}
 							}

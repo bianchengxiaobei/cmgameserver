@@ -19,6 +19,7 @@ func (handler *ReqjoinRoomHandler) Action(session network.SocketSessionInterface
 				if groupId,ok := room.JoinOneMember(roleId);ok == true{
 					role := handler.GameServer.GetRoleManager().GetOnlineRole(roleId)
 					role.SetRoomId(room.GetRoomId())
+					role.SetInRooming(true)
 					//通知房间内的客户端其他成员包括自己加入通知
 					rMsg := &message.M2C_JoinRoom{}
 					rMsg.JoinerId = roleId

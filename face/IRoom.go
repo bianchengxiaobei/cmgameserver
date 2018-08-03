@@ -19,4 +19,5 @@ type IRoom interface {
 	SetRoomOwnerGroupId(id int32)
 	CheckRoomReady()bool
 	SetRoomMemberReady(ready bool,roleId int64) bool
+	IsRoomOwner(roleId int64)bool
 }

@@ -5,18 +5,19 @@ import (
 	"errors"
 	"github.com/bianchengxiaobei/cmgo/log4g"
 	"github.com/bianchengxiaobei/cmgo/network"
-	"github.com/golang/protobuf/proto"
+	"cmgameserver/message"
 )
 
 type ServerMessageHandler struct {
 	gameServer *GameServer
 	pool       *HandlerPool
-	pingMsg 	*proto.Message
+	pingMsg 	*message.M2C_GamePing
 }
 
 func (handler ServerMessageHandler) Init() {
 	handler.pool.Register(10001, &msgHandler.LoginToGameServerHandler{GameServer: handler.gameServer})
 	handler.pool.Register(10003,&msgHandler.RoleRegisterGateHandler{GameServer:handler.gameServer})
+	handler.pool.Register(10004,&msgHandler.RoleQuitHandler{GameServer:handler.gameServer})
 
 	handler.pool.Register(5001,&msgHandler.ReqRefreshRoomListHandle{GameServer:handler.gameServer})
 	handler.pool.Register(5003,&msgHandler.CreateRoomHandler{GameServer:handler.gameServer})
@@ -54,10 +55,12 @@ func (handler ServerMessageHandler) SessionClosed(session network.SocketSessionI
 }
 
 func (handler ServerMessageHandler) SessionPeriod(session network.SocketSessionInterface) {
-	log4g.Info("Period")
-	roleMap := handler.gameServer.RoleManager.GetAllOnlineRole()
+	//log4g.Info("Period")
+	roleMap := handler.gameServer.RoleManager.GetAllOnlineRole(session)
 	for k,v := range roleMap{
-		handler.gameServer.WriteInnerMsg(v.GetGateSession(),k,5014,handler.pingMsg)
+		if v.IsConnected(){
+			handler.gameServer.WriteInnerMsg(v.GetGateSession(),k,5014,handler.pingMsg)
+		}
 	}
 }
 

@@ -3,6 +3,7 @@ package roleManager
 import (
 	"cmgameserver/bean"
 	"github.com/bianchengxiaobei/cmgo/network"
+	"sync"
 )
 
 
@@ -14,11 +15,13 @@ type OnlineRole struct {
 	BattleInfo	BattleInfo
 	Connected	bool
 	GateSession	network.SocketSessionInterface
+	sync.RWMutex
 }
 type BattleInfo struct {
 	RoomId 		int32
 	BattleId	int32
 	IsInBattling	bool
+	IsInRooming		bool
 	IsLoadFinished  bool
 }
 func (role *OnlineRole)SetGateSession(session network.SocketSessionInterface){
@@ -104,15 +107,43 @@ func (role *OnlineRole)GetAllHero() map[int32]bean.Hero{
 }
 //是否掉线或者连接
 func (role *OnlineRole)IsConnected()bool{
+	role.RLock()
+	defer role.RUnlock()
 	return role.Connected
 }
 func (role *OnlineRole)SetConnected(conn bool){
+	role.Lock()
+	defer role.Unlock()
 	role.Connected = conn
 }
+func (role *OnlineRole)IsInBattling()bool{
+	role.RLock()
+	defer role.RUnlock()
+	return role.BattleInfo.IsInBattling
+}
+func (role *OnlineRole)SetInBattling(value bool){
+	role.Lock()
+	defer role.Unlock()
+	role.BattleInfo.IsInBattling = value
+}
+func (role *OnlineRole)IsInRooming()bool{
+	role.RLock()
+	defer role.RUnlock()
+	return role.BattleInfo.IsInRooming
+}
+func (role *OnlineRole)SetInRooming(value bool){
+	role.Lock()
+	defer role.Unlock()
+	role.BattleInfo.IsInRooming = value
+}
 func (role *OnlineRole)IsLoadFinished()bool{
+	role.RLock()
+	defer role.RUnlock()
 	return role.BattleInfo.IsLoadFinished
 }
 func (role *OnlineRole)SetLoadFinished(finished bool){
+	role.Lock()
+	defer role.Unlock()
 	role.BattleInfo.IsLoadFinished = finished
 }
 func (role *OnlineRole)GetBattleId() int32{

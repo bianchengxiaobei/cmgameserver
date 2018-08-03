@@ -37,6 +37,10 @@ type IOnlineRole interface {
 	SetConnected(conn bool)
 	IsLoadFinished()bool
 	SetLoadFinished(finished bool)
+	IsInBattling()bool
+	SetInBattling(value bool)
+	IsInRooming()bool
+	SetInRooming(value bool)
 	GetBattleId() int32
 	SetBattleId(id int32)
 }

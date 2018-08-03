@@ -5,7 +5,6 @@ import (
 	"cmgameserver/message"
 	"time"
 	"sync"
-	"github.com/bianchengxiaobei/cmgo/log4g"
 )
 
 type Battle struct {
@@ -74,7 +73,7 @@ func (battle *Battle) AddFrameCommand(playerId int32, cmdType int32, param strin
 	cmd.CommandType = cmdType
 	cmd.Param = param
 	battle.frameCache[battle.FrameCount] = append(battle.frameCache[battle.FrameCount],cmd)
-	log4g.Infof("f1111:%d",battle.FrameCount)
+	//log4g.Infof("f1111:%d",battle.FrameCount)
 }
 func (battle *Battle) BattleLoop() {
 	var cmdLen int
@@ -86,11 +85,11 @@ func (battle *Battle) BattleLoop() {
 	battle.msg.FrameCount = battle.FrameCount
 	cmd := battle.frameCache[battle.FrameCount]
 	if cmd != nil && len(cmd) > 0{
-		log4g.Info("fewfee")
+		//log4g.Info("fewfee")
 		battle.msg.Cmd = cmd
 	}
 	for _, v := range battle.players {
-		if v != nil {
+		if v != nil && v.IsConnected(){
 			battle.GameServer.WriteInnerMsg(v.GetGateSession(), v.GetRoleId(), 5012, battle.msg)
 		}
 	}

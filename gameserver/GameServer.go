@@ -72,6 +72,7 @@ func (server *GameServer) Init(gameBaseConfig string, gameSessionConfig string) 
 		pool:&HandlerPool{
 			handlers:make(map[int32]HandlerBase),
 		},
+		pingMsg:&message.M2C_GamePing{},
 	}
 	serverHandler.Init()
 	for id, _ := range server.gameConfig.GateConnectConfigMap {
@@ -87,8 +88,6 @@ func (server *GameServer) Init(gameBaseConfig string, gameSessionConfig string) 
 func (server *GameServer) Run() {
 	defer func() {
 		if err := recover(); err != nil {
-			//log4g.Error("网关服务器监听出错!")
-			fmt.Println(err)
 			return
 		}
 	}()
@@ -97,7 +96,11 @@ func (server *GameServer) Run() {
 		if server.GameClientServer != nil && len(server.GameClientServer) > 0 {
 			for id, client := range server.GameClientServer {
 				addr := server.gameConfig.GateConnectConfigMap[id]
-				client.Connect(addr)
+				err := client.Connect(addr)
+				if err != nil{
+					log4g.Error(err.Error())
+					return
+				}
 				server.RegisterGate(id)
 				log4g.Infof("连接网关[%d]地址:[%s]!", id, addr)
 			}
@@ -136,8 +139,9 @@ func LoadSessionConfig(filePath string, sessionConfig *network.SocketSessionConf
 			TcpKeepAlivePeriod: 3e9,
 			TcpReadBuffSize:    1024,
 			TcpWriteBuffSize:   1024,
-			ReadChanLen:        1,
-			WriteChanLen:       1,
+			ReadChanLen:        1024,
+			WriteChanLen:       1024,
+			PeriodTime:5e9,
 		}
 		data, err = json.Marshal(config)
 		if _, err = file.Write(data); err != nil {
