@@ -34,18 +34,45 @@ func (manager *RoleManager)NewOnlineRole(roleId int64) face.IOnlineRole{
 		dbSession := manager.GameServer.GetDBManager().Get()
 		if dbSession != nil{
 			role := bean.Role{}
+			var heros []bean.Hero
 			c := dbSession.DB("sanguozhizhan").C("Role")
 			err = c.Find(bson.M{"roleid":roleId}).One(&role)
 			if err != nil{
 				return nil
 			}
+			c = dbSession.DB("sanguozhizhan").C("Hero")
+			err = c.Find(bson.M{"roleid":roleId}).All(&heros)
+			if err != nil{
+				return nil
+			}
+			if len(heros) == 0{
+				//说明游戏还没有英雄，免费送，刚开始
+				hero := bean.Hero{}
+				hero.RoleId = roleId
+				hero.HeroId = 1
+				hero.Level = 1
+				err = c.Insert(&hero)
+				if err != nil{
+					return nil
+				}
+				heros = append(heros, hero)
+			}
 			onlineRole := OnlineRole{
 				Role:role,
+				Heros:make(map[int32]bean.Hero),
 				BattleInfo:BattleInfo{},
 				Connected:true,
+			}
+			if len(heros) > 0{
+				for _,v := range heros{
+					onlineRole.Heros[v.HeroId] = v
+				}
 			}
 			return &onlineRole
 		}
 	}
 	return nil
+}
+func (manager *RoleManager)GetAllOnlineRole()map[int64]face.IOnlineRole{
+	return manager.onlineRoles
 }

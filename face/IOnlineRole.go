@@ -1,6 +1,9 @@
 package face
 
-import "github.com/bianchengxiaobei/cmgo/network"
+import (
+	"github.com/bianchengxiaobei/cmgo/network"
+	"cmgameserver/bean"
+)
 
 type IOnlineRole interface {
 	SetGateSession(session network.SocketSessionInterface)
@@ -19,6 +22,17 @@ type IOnlineRole interface {
 	SetNickName(nickName string)
 	GetRoomId()int32
 	SetRoomId(roomId int32)
+	GetLevel()int32
+	SetLevel(level int32)
+	GetDiam() int32
+	SetDiam(diam int32)
+	GetGold() int32
+	SetGold(gold int32)
+	GetExp() int32
+	SetExp(exp int32)
+	GetAvatarId() int32
+	SetAvatarId(avatarId int32)
+	GetAllHero() map[int32]bean.Hero
 	IsConnected()bool
 	SetConnected(conn bool)
 	IsLoadFinished()bool

@@ -54,6 +54,10 @@ func (protocol ServerProtocol) Decode(session network.SocketSessionInterface, da
 		innerMsg  network.InnerWriteMessage
 	)
 	defer func() {
+		err := recover()
+		if err != nil{
+			log4g.Error("Decode Error")
+		}
 		msgHeader = nil
 		ioBuffer = nil
 	}()
@@ -69,15 +73,16 @@ func (protocol ServerProtocol) Decode(session network.SocketSessionInterface, da
 	if ioBuffer.Len() < int(msgHeader.MsgBodyLen) {
 		return nil, 0, nil
 	}
-
-	allLen := int(msgHeader.MsgBodyLen) + InnerMessageHeaderLen
+	bodyLen := int(msgHeader.MsgBodyLen)
+	allLen := bodyLen + InnerMessageHeaderLen
 
 	var msgType = protocol.pool.GetMessageType(msgHeader.MessageId)
 	if msgType == nil{
 		fmt.Println(msgHeader.MessageId)
 	}
 	msg := reflect.New(msgType).Interface()
-	err = proto.Unmarshal(ioBuffer.Bytes(), msg.(proto.Message))
+	bodyBytes := ioBuffer.Next(bodyLen)
+	err = proto.Unmarshal(bodyBytes, msg.(proto.Message))
 	if err != nil {
 		log4g.Error(err.Error())
 	}
@@ -103,6 +108,9 @@ func (protocol ServerProtocol) Encode(session network.SocketSessionInterface, wr
 		data      []byte
 	)
 	defer func() {
+		if err := recover();err != nil{
+			fmt.Println("fefe:",err)
+		}
 		data = nil
 		ioBuffer = nil
 		protoMsg = nil

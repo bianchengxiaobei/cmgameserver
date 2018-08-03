@@ -5,11 +5,13 @@ import (
 	"errors"
 	"github.com/bianchengxiaobei/cmgo/log4g"
 	"github.com/bianchengxiaobei/cmgo/network"
+	"github.com/golang/protobuf/proto"
 )
 
 type ServerMessageHandler struct {
 	gameServer *GameServer
 	pool       *HandlerPool
+	pingMsg 	*proto.Message
 }
 
 func (handler ServerMessageHandler) Init() {
@@ -53,6 +55,10 @@ func (handler ServerMessageHandler) SessionClosed(session network.SocketSessionI
 
 func (handler ServerMessageHandler) SessionPeriod(session network.SocketSessionInterface) {
 	log4g.Info("Period")
+	roleMap := handler.gameServer.RoleManager.GetAllOnlineRole()
+	for k,v := range roleMap{
+		handler.gameServer.WriteInnerMsg(v.GetGateSession(),k,5014,handler.pingMsg)
+	}
 }
 
 func (handler ServerMessageHandler) ExceptionCaught(session network.SocketSessionInterface, err error) {

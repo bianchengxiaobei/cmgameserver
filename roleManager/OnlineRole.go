@@ -8,6 +8,7 @@ import (
 
 type OnlineRole struct {
 	Role     bean.Role
+	Heros	map[int32]bean.Hero
 	GateId   int32
 	UserName string
 	BattleInfo	BattleInfo
@@ -67,6 +68,39 @@ func (role *OnlineRole)GetRoomId()int32{
 }
 func (role *OnlineRole)SetRoomId(roomId int32){
 	role.BattleInfo.RoomId = roomId
+}
+func (role *OnlineRole)GetLevel() int32{
+	return role.Role.Level
+}
+func (role *OnlineRole)SetLevel(level int32){
+	role.Role.Level = level
+}
+func (role *OnlineRole)GetDiam() int32{
+	return role.Role.Diam
+}
+func (role *OnlineRole)SetDiam(diam int32){
+	role.Role.Diam = diam
+}
+func (role *OnlineRole)GetGold() int32{
+	return role.Role.Gold
+}
+func (role *OnlineRole)SetGold(gold int32){
+	role.Role.Gold = gold
+}
+func (role *OnlineRole)GetExp() int32{
+	return role.Role.Exp
+}
+func (role *OnlineRole)SetExp(exp int32){
+	role.Role.Exp = exp
+}
+func (role *OnlineRole)GetAvatarId() int32{
+	return role.Role.AvatarId
+}
+func (role *OnlineRole)SetAvatarId(avatarId int32){
+	role.Role.AvatarId = avatarId
+}
+func (role *OnlineRole)GetAllHero() map[int32]bean.Hero{
+	return role.Heros
 }
 //是否掉线或者连接
 func (role *OnlineRole)IsConnected()bool{

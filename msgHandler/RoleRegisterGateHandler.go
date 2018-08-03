@@ -15,12 +15,31 @@ func (handler *RoleRegisterGateHandler) Action(session network.SocketSessionInte
 		if protoMsg,ok := innerMsg.MsgData.(*message.G2M_RoleRegisterToGateSuccess);ok{
 			rMsg := new(message.M2C_EnterLobby)
 			if rMsg.RoleBasicInfo == nil{
-				rMsg.RoleBasicInfo = new(message.RoleBasicInfo)
+				rMsg.RoleBasicInfo = new(message.Role)
 			}
-			rMsg.IsInBattle = true
+			rMsg.IsInBattle = false
 			rMsg.RoleBasicInfo.RoleId = protoMsg.RoleId
-			rMsg.RoleBasicInfo.NickName = handler.GameServer.GetRoleManager().GetOnlineRole(protoMsg.RoleId).GetNickName()
-			rMsg.RoleBasicInfo.Gold = 0
+			role := handler.GameServer.GetRoleManager().GetOnlineRole(protoMsg.RoleId)
+			rMsg.RoleBasicInfo.NickName = role.GetNickName()
+			rMsg.RoleBasicInfo.Gold = role.GetGold()
+			rMsg.RoleBasicInfo.AvatarId = role.GetAvatarId()
+			rMsg.RoleBasicInfo.Exp = role.GetExp()
+			rMsg.RoleBasicInfo.Diam = role.GetDiam()
+			rMsg.RoleBasicInfo.Level = role.GetLevel()
+			heroMap := role.GetAllHero()
+			if len(heroMap) > 0{
+				for _,v := range heroMap{
+					hero := &message.Hero{}
+					hero.HeroId = v.HeroId
+					hero.Level = v.Level
+					for _,v1 := range v.ItemIds{
+						if v1 > 0{
+							hero.ItemIds = append(hero.ItemIds, v1)
+						}
+					}
+					rMsg.HeroInfo = append(rMsg.HeroInfo, hero)
+				}
+			}
 			handler.GameServer.WriteInnerMsg(session,protoMsg.RoleId,5000,rMsg)
 		}
 	}

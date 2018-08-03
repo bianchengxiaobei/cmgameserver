@@ -243,5 +243,7 @@ func (server *GameServer)WriteInnerMsg(session network.SocketSessionInterface,ro
 		MsgData:msg,
 	}
 	innerMsg.RoleId = roleId
-	session.WriteMsg(msgId,innerMsg)
+	if err := session.WriteMsg(msgId,innerMsg);err != nil{
+		log4g.Info(err.Error())
+	}
 }
