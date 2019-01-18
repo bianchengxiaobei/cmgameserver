@@ -6,11 +6,11 @@ import (
 	"github.com/bianchengxiaobei/cmgo/network"
 )
 
-type BattleLoadFinsihedHandler struct {
+type BattleLoadFinishedHandler struct {
 	GameServer face.IGameServer
 }
 
-func (handler *BattleLoadFinsihedHandler) Action(session network.SocketSessionInterface, msg interface{}) {
+func (handler *BattleLoadFinishedHandler) Action(session network.SocketSessionInterface, msg interface{}) {
 	if innerMsg, ok := msg.(network.InnerWriteMessage); ok {
 		if _, ok := innerMsg.MsgData.(*message.C2M_LoadFinished); ok {
 			//检测房间内所有玩家是否加载完成
@@ -19,7 +19,8 @@ func (handler *BattleLoadFinsihedHandler) Action(session network.SocketSessionIn
 				role.SetLoadFinished(true)
 				if handler.GameServer.GetRoomManager().CheckAllRoomMemberLoadFinished(role.GetRoomId()){
 					//开始战斗（发送给所有玩家，关闭加载界面）
-					roleIds := handler.GameServer.GetRoomManager().GetRoomByRoomId(role.GetRoomId()).GetRoomRoleIds()
+					room := handler.GameServer.GetRoomManager().GetRoomByRoomId(role.GetRoomId())
+					roleIds := room.GetRoomRoleIds()
 					rMsg := new(message.M2C_StartBattle)
 					var roles [4]face.IOnlineRole
 					index := 0
@@ -35,9 +36,14 @@ func (handler *BattleLoadFinsihedHandler) Action(session network.SocketSessionIn
 							}
 						}
 					}
-					battle := handler.GameServer.GetBattleManager().CreateBattle(roles)
+					battle := handler.GameServer.GetBattleManager().GetBattleInFree()
 					if battle != nil{
-						battle.Start()
+						battle.ReStart(roles)
+					}else{
+						battle := handler.GameServer.GetBattleManager().CreateBattle(roles)
+						if battle != nil{
+							battle.Start()
+						}
 					}
 				}
 			}

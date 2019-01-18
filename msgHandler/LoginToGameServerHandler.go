@@ -5,6 +5,7 @@ import (
 	"github.com/bianchengxiaobei/cmgo/network"
 	"github.com/bianchengxiaobei/cmgo/log4g"
 	"cmgameserver/face"
+	"time"
 )
 
 type LoginToGameServerHandler struct {
@@ -28,7 +29,10 @@ func (handler *LoginToGameServerHandler) Action(session network.SocketSessionInt
 			onlineRole.SetGateId(protoMsg.GateId)
 			onlineRole.SetUseName(protoMsg.UserName)
 			onlineRole.SetGateSession(session)
+			onlineRole.SetConnected(true)
+			onlineRole.SetPingTime(time.Now())
 			roleManager.AddOnlineRole(onlineRole)
+			log4g.Infof("玩家[%d]登录游戏服务器!",roleId)
 			//通知网关服务器登录游戏逻辑服成功
 			rMsg := new(message.M2G_LoginSuccessNotifyGate)
 			rMsg.RoleId = onlineRole.GetRoleId()

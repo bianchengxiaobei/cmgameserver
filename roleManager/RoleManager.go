@@ -7,6 +7,8 @@ import (
 	"cmgameserver/face"
 	"github.com/bianchengxiaobei/cmgo/network"
 	"github.com/bianchengxiaobei/cmgo/log4g"
+	"cmgameserver/message"
+	"time"
 )
 type RoleManager struct {
 	lock        sync.RWMutex
@@ -62,23 +64,43 @@ func (manager *RoleManager)NewOnlineRole(roleId int64) face.IOnlineRole{
 			if err != nil{
 				return nil
 			}
+			if len(role.Items) == 0{
+				//说明游戏还没有背包
+				for i:=0;i<int(role.MaxBagNum);i++{
+					item := bean.Item{}
+					item.ItemId = 0
+					role.Items = append(role.Items, item)
+				}
+			}
 			if len(heros) == 0{
 				//说明游戏还没有英雄，免费送，刚开始
 				hero := bean.Hero{}
 				hero.RoleId = roleId
 				hero.HeroId = 1
 				hero.Level = 1
+				hero.ItemIds[2] = 15000
 				err = c.Insert(&hero)
 				if err != nil{
 					return nil
 				}
 				heros = append(heros, hero)
 			}
+			now := time.Now()
+			if role.LoginTime != now{
+				//清空每日任务
+				for k,_ := range role.DayGetTask{
+					role.DayGetTask[k] = 0
+				}
+				role.LoginTime = now
+				role.TaskSeed = int32(now.Nanosecond())
+				role.GetSign = false
+			}
 			onlineRole := OnlineRole{
 				Role:role,
 				Heros:make(map[int32]bean.Hero),
 				BattleInfo:BattleInfo{},
 				Connected:true,
+				PingTime:time.Now(),
 			}
 			if len(heros) > 0{
 				for _,v := range heros{
@@ -98,18 +120,19 @@ func (manager *RoleManager)GetAllOnlineRole(gateSession network.SocketSessionInt
 func (manager *RoleManager)RoleQuit(roleId int64){
 	defer func() {
 		if err := recover();err != nil{
+			log4g.Info(err.(error).Error())
 			return
 		}
 	}()
 	//如果role正在战斗中，判断战斗的进程，比如房间中，或者是正在战斗
 	role := manager.GetOnlineRole(roleId)
 	if role != nil{
+		role.SetConnected(false)
 		//更新数据库
+		role.UpdateDB(manager.GameServer.GetDBManager())
 		if role.IsInBattling(){
 			//退出战斗
-			role.SetConnected(false)
 			role.SetLoadFinished(false)
-
 		}else{
 			if role.IsInRooming(){
 				//退出该房间，发送消息
@@ -122,12 +145,12 @@ func (manager *RoleManager)RoleQuit(roleId int64){
 						if roomManger.DeleteRoom(roomId){
 							log4g.Infof("删除房间[%d]成功!",roomId)
 						}else{
-							log4g.Errorf("删除房间[%d]失败!",roomId)
+							log4g.Infof("删除房间[%d]失败!",roomId)
 						}
 					}else{
 						//移除成员，并且通知房间所有人
-						if roomManger.RemoveOneMember(roomId,role) == false{
-							log4g.Errorf("移除房间[%d]成员[%d]失败!",roomId,roleId)
+						if roomManger.RemoveOneMemberByRoom(room,role) == false{
+							log4g.Infof("移除房间[%d]成员[%d]失败!",roomId,roleId)
 						}
 					}
 				}
@@ -135,7 +158,12 @@ func (manager *RoleManager)RoleQuit(roleId int64){
 			//移除缓存，如果是战斗中，就不移除，等过游戏结束如果玩家还么有连接上来再移除
 			manager.RemoveOnlineRole(role)
 		}
+		//发送给网关移除角色
+		message := &message.M2G_RoleQuitGate{
+			RoleId: roleId,
+		}
+		manager.GameServer.WriteInnerMsg(role.GetGateSession(),roleId,10005,message)
 	}else{
-		log4g.Errorf("不存在玩家[%d],退出游戏服失败!",roleId)
+		log4g.Infof("不存在玩家[%d],退出游戏服!",roleId)
 	}
 }

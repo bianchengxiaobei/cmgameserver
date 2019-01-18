@@ -6,11 +6,11 @@ import (
 	"github.com/bianchengxiaobei/cmgo/network"
 )
 
-type ReqjoinRoomHandler struct {
+type ReqJoinRoomHandler struct {
 	GameServer face.IGameServer
 }
 
-func (handler *ReqjoinRoomHandler) Action(session network.SocketSessionInterface, msg interface{}) {
+func (handler *ReqJoinRoomHandler) Action(session network.SocketSessionInterface, msg interface{}) {
 	if innerMsg, ok := msg.(network.InnerWriteMessage); ok {
 		if protoMsg, ok := innerMsg.MsgData.(*message.C2M_ReqJoinRoom); ok {
 			room := handler.GameServer.GetRoomManager().GetRoomByRoomId(protoMsg.RoomId)
@@ -22,11 +22,18 @@ func (handler *ReqjoinRoomHandler) Action(session network.SocketSessionInterface
 					role.SetInRooming(true)
 					//通知房间内的客户端其他成员包括自己加入通知
 					rMsg := &message.M2C_JoinRoom{}
-					rMsg.JoinerId = roleId
-					rMsg.JoinerName = handler.GameServer.GetRoleManager().GetOnlineRole(roleId).GetNickName()
-					rMsg.JoinerIconId = 0
-					rMsg.GroupId = groupId
+					if rMsg.RoomSetting == nil{
+						rMsg.RoomSetting = &message.RoomSetting{}
+					}
+					rMsg.Member = &message.RoomMember{}
+					rMsg.Member.JoinerId = roleId
+					rMsg.Member.JoinerName = role.GetNickName()
+					rMsg.Member.JoinerIconId = role.GetAvatarId()
+					rMsg.Member.GroupId = groupId
+					rMsg.Member.JoinerLevel = role.GetLevel()
 					rMsg.RoomId = room.GetRoomId()
+					rMsg.RoomSetting.MapId = room.GetMapId()
+					rMsg.RoomSetting.IsWarFow = room.GetIsWarFow()
 					allRoomRoles := room.GetRoomRoleIds()
 					for _,v := range allRoomRoles{
 						if v > 0{

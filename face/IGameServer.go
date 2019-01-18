@@ -13,4 +13,5 @@ type IGameServer interface {
 	GetRoomManager() IRoomManager
 	GetBattleManager() IBattleManager
 	WriteInnerMsg(session network.SocketSessionInterface,roleId int64,msgId int,msg proto.Message)
+	GetGameVersion()string
 }

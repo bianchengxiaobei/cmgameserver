@@ -22,6 +22,7 @@ func (handler *ReqStartBattleHandler) Action(session network.SocketSessionInterf
 						//发送给所有客户端开始游戏
 						rMsg := new(message.M2C_StartBattleLoad)
 						rMsg.AllReady = true
+						rMsg.Seed = room.GetSeed()
 						allRoomRoles := room.GetRoomRoleIds()
 						for _,v := range allRoomRoles{
 							if v > 0{
@@ -36,6 +37,7 @@ func (handler *ReqStartBattleHandler) Action(session network.SocketSessionInterf
 					}else{
 						//发送给客户端有玩家没有准备
 						rMsg := new(message.M2C_StartBattleLoad)
+						rMsg.Seed = room.GetSeed()
 						rMsg.AllReady = false
 						handler.GameServer.WriteInnerMsg(session,innerMsg.RoleId,5009,rMsg)
 					}

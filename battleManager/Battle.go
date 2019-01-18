@@ -34,8 +34,7 @@ func (battle *Battle) Start() {
 				battle.BattleLoop()
 			}
 		}
-		//结算
-		battle.CalculateAward()
+		//结算客户端发
 		battle.Reset()
 		ok := <-battle.done
 		if ok {
@@ -47,7 +46,13 @@ func (battle *Battle) Finish() {
 	battle.state = face.GameOver
 	battle.done <- false
 }
-func (battle *Battle) ReStart() {
+func (battle *Battle) ReStart(roleIds [4]face.IOnlineRole) {
+	battle.players = roleIds
+	for _,v := range battle.players{
+		if v != nil{
+			v.SetBattleId(battle.BattleId)
+		}
+	}
 	battle.done <- true
 }
 func (battle *Battle) GetBattleState() face.BattleState {
@@ -59,6 +64,15 @@ func (battle *Battle) SetBattleState(state face.BattleState) {
 func (battle *Battle) Reset() {
 	battle.FrameCount = 0
 	battle.state = face.Free
+	//清空角色列表
+	battle.players[0] = nil
+	battle.players[1] = nil
+	battle.players[2] = nil
+	battle.players[3] = nil
+	//清除缓存帧
+	for k,_:=range battle.frameCache{
+		delete(battle.frameCache,k)
+	}
 }
 func (battle *Battle) CalculateAward() {
 
@@ -88,12 +102,46 @@ func (battle *Battle) BattleLoop() {
 		//log4g.Info("fewfee")
 		battle.msg.Cmd = cmd
 	}
+	battle.RLock()
+	hasPlayerNoLeave := false
 	for _, v := range battle.players {
 		if v != nil && v.IsConnected(){
+			hasPlayerNoLeave = true
 			battle.GameServer.WriteInnerMsg(v.GetGateSession(), v.GetRoleId(), 5012, battle.msg)
 		}
 	}
+	if hasPlayerNoLeave == false{
+		battle.AllPlayerLeave()
+	}
+	battle.RUnlock()
 	battle.Lock()
 	battle.FrameCount++
 	battle.Unlock()
+}
+//检测所有玩家离线,删除该战斗
+func (battle *Battle)AllPlayerLeave()  {
+	//删除房间
+	roomId := battle.players[0].GetRoomId()
+	battle.GameServer.GetRoomManager().DeleteRoom(roomId)
+	battle.Finish()
+}
+func (battle *Battle)RemovePlayer(roleId int64){
+	battle.Lock()
+	defer battle.Unlock()
+	for k,v := range battle.players{
+		if v != nil {
+			if v.GetRoleId() == roleId {
+				battle.players[k] = nil
+				//log4g.Infof("移除战斗成员成功![%d]",roleId)
+			}
+		}
+	}
+}
+func (battle *Battle)GetSaveFrames() map[int32][]*message.Command{
+	return battle.frameCache
+}
+func (battle *Battle)GetFrameCount()int32{
+	battle.RLock()
+	defer battle.RUnlock()
+	return battle.FrameCount
 }

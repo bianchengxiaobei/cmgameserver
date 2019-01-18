@@ -19,12 +19,23 @@ func (handler *CreateRoomHandler) Action(session network.SocketSessionInterface,
 				room.SetRoomName(protoMsg.Room.RoomName)
 				room.SetRoomMaxPlayerNum(protoMsg.Room.MaxPlayerNum)
 				room.SetGameType(protoMsg.Room.GameType)
+				room.SetIsWarFow(protoMsg.Room.IsWarFow)
+				room.SetMapId(protoMsg.Room.MapId)
 				rMsg := &message.M2C_JoinRoom{}
-				rMsg.JoinerId = roleId
-				rMsg.JoinerName = handler.GameServer.GetRoleManager().GetOnlineRole(roleId).GetNickName()
-				rMsg.JoinerIconId = 0
-				rMsg.GroupId = room.GetRoomOwnerGroupId()
+				if rMsg.RoomSetting == nil{
+					rMsg.RoomSetting = &message.RoomSetting{}
+				}
+				ownerRole := handler.GameServer.GetRoleManager().GetOnlineRole(roleId)
+				if rMsg.Member == nil{
+					rMsg.Member = &message.RoomMember{}
+				}
+				rMsg.Member.JoinerId = roleId
+				rMsg.Member.JoinerName = ownerRole.GetNickName()
+				rMsg.Member.JoinerIconId = ownerRole.GetAvatarId()
+				rMsg.Member.GroupId = room.GetRoomOwnerGroupId()
 				rMsg.RoomId = room.GetRoomId()
+				rMsg.RoomSetting.IsWarFow = protoMsg.Room.IsWarFow
+				rMsg.RoomSetting.MapId = protoMsg.Room.MapId
 				handler.GameServer.WriteInnerMsg(session,innerMsg.RoleId,5004,rMsg)
 			}
 		}

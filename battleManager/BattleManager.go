@@ -30,8 +30,8 @@ func (battleManager *BattleManager) CreateBattle(roles [4]face.IOnlineRole) face
 	}
 	battle := &Battle{
 		BattleId: genBattleId,
-		done:     make(chan bool),
-		timer:    time.NewTicker(80 * time.Millisecond),
+		done:     make(chan bool,1),
+		timer:    time.NewTicker(100 * time.Millisecond),
 		players:  roles,
 		msg:      new(message.M2C_BattleFrame),
 		frameCache:make(map[int32][]*message.Command),
