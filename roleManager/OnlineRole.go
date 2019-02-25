@@ -80,6 +80,12 @@ func (role *OnlineRole)GetNickName()string{
 func (role *OnlineRole)SetNickName(nickName string){
 	role.Role.NickName = nickName
 }
+func (role *OnlineRole)GetSex()int32{
+	return role.Role.Sex
+}
+func (role *OnlineRole)SetSex(sex int32){
+	role.Role.Sex = sex
+}
 func (role *OnlineRole)GetRoomId()int32{
 	return role.BattleInfo.RoomId
 }

@@ -43,6 +43,8 @@ func (handler ServerMessageHandler) Init() {
 	handler.pool.Register(5037,&msgHandler.GetTaskAwardHandler{GameServer:handler.gameServer})
 	handler.pool.Register(5038,&msgHandler.GetSingHandler{GameServer:handler.gameServer})
 	handler.pool.Register(5039,&msgHandler.ChangeFreeSoldierDataHandler{GameServer:handler.gameServer})
+	handler.pool.Register(5040,&msgHandler.ChangeSexHandler{GameServer:handler.gameServer})
+	handler.pool.Register(5043,&msgHandler.ChangeSignHandler{GameServer:handler.gameServer})
 }
 func (handler ServerMessageHandler) MessageReceived(session network.SocketSessionInterface, message interface{}) error {
 	if writeMsg, ok := message.(network.WriteMessage); !ok {

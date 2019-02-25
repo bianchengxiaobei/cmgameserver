@@ -49,6 +49,10 @@ type IOnlineRole interface {
 	SetInRooming(value bool)
 	GetBattleId() int32
 	SetBattleId(id int32)
+	GetSex()int32
+	SetSex(sex int32)
+	SetSign(sign string)
+	GetSign() string
 	GetMaxBagNum() int32
 	SetMaxBagNum(num int32)
 	AddGold(gold int32)

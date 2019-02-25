@@ -13,6 +13,7 @@ type Role struct {
 	Gold	int32
 	Diam    int32
 	Exp     int32
+	Sex 	int32
 	MaxBagNum int32
 	Items  []Item
 	WinLevel []int32
