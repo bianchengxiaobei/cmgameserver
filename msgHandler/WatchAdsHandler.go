@@ -17,12 +17,9 @@ func (handler *WatchAdsHandler) Action(session network.SocketSessionInterface, m
 		if protoMsg, ok := innerMsg.MsgData.(*message.C2M_WatchAds); ok {
 			role := handler.GameServer.GetRoleManager().GetOnlineRole(innerMsg.RoleId)
 			if role != nil {
-				var addGold int32
 				if protoMsg.IsBanner{
-					addGold = 20
 					role.AddGold(20)
 				}else{
-					addGold = 50
 					role.AddGold(50)
 				}
 				dbSession := handler.GameServer.GetDBManager().Get()
@@ -36,7 +33,6 @@ func (handler *WatchAdsHandler) Action(session network.SocketSessionInterface, m
 						return
 					}
 					msg := new(message.M2C_WatchAdsResult)
-					msg.Gold = addGold
 					handler.GameServer.WriteInnerMsg(role.GetGateSession(), role.GetRoleId(), 5021, msg)
 				}
 			} else {

@@ -44,7 +44,7 @@ func (handler ServerMessageHandler) Init() {
 	handler.pool.Register(5038,&msgHandler.GetSingHandler{GameServer:handler.gameServer})
 	handler.pool.Register(5039,&msgHandler.ChangeFreeSoldierDataHandler{GameServer:handler.gameServer})
 	handler.pool.Register(5040,&msgHandler.ChangeSexHandler{GameServer:handler.gameServer})
-	handler.pool.Register(5043,&msgHandler.ChangeSignHandler{GameServer:handler.gameServer})
+	handler.pool.Register(5042,&msgHandler.ChangeSignHandler{GameServer:handler.gameServer})
 }
 func (handler ServerMessageHandler) MessageReceived(session network.SocketSessionInterface, message interface{}) error {
 	if writeMsg, ok := message.(network.WriteMessage); !ok {
@@ -82,7 +82,8 @@ func (handler ServerMessageHandler) SessionPeriod(session network.SocketSessionI
 			es := time.Now().Sub(v.GetPingTime())
 			esTime := es.Seconds()
 			if esTime > 15{
-				log4g.Infof("超时关闭Session[%f]",esTime)
+				log4g.Infof("[%d]超时关闭Session[%f]",k,esTime)
+				v.SetConnected(false)
 				message := &message.M2G_CloseSession{}
 				message.RoleId = v.GetRoleId()
 				handler.gameServer.WriteInnerMsg(v.GetGateSession(),v.GetRoleId(),10006,message)

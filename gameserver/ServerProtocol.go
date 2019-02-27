@@ -78,7 +78,7 @@ func (protocol ServerProtocol) Init() {
 	protocol.pool.Register(5040,reflect.TypeOf(message.C2M_ChangeSex{}))
 	//protocol.pool.Register(5041,reflect.TypeOf(message.M2C_ChangeSexResult{}))
 	protocol.pool.Register(5042,reflect.TypeOf(message.C2M_ChangeSign{}))
-	protocol.pool.Register(5043,reflect.TypeOf(message.M2C_ChangeSignResult{}))
+	//protocol.pool.Register(5043,reflect.TypeOf(message.M2C_ChangeSignResult{}))
 }
 func (protocol ServerProtocol) Decode(session network.SocketSessionInterface, data []byte) (interface{}, int, error) {
 	var (

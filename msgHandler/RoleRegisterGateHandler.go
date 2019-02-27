@@ -26,6 +26,8 @@ func (handler *RoleRegisterGateHandler) Action(session network.SocketSessionInte
 			rMsg.RoleBasicInfo.Exp = role.GetExp()
 			rMsg.RoleBasicInfo.Diam = role.GetDiam()
 			rMsg.RoleBasicInfo.Level = role.GetLevel()
+			rMsg.RoleBasicInfo.Sex = role.GetSex()
+			rMsg.RoleBasicInfo.Sign = role.GetSign()
 			rMsg.RoleBasicInfo.MaxBagNum = role.GetMaxBagNum()
 			rMsg.RoomId = role.GetRoomId()
 			rMsg.BattleId = role.GetBattleId()

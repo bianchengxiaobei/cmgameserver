@@ -28,8 +28,9 @@ func (handler *FailedBattleHandler) Action(session network.SocketSessionInterfac
 						return
 					}
 					msg := new(message.M2C_BattleResult)
-					msg.Gold = 0
-					msg.Exp = 10
+					msg.Award1 = 1
+					msg.Award2 = 2
+					msg.Award3 = 3
 					handler.GameServer.WriteInnerMsg(role.GetGateSession(), role.GetRoleId(), 5019, msg)
 				}
 			} else {

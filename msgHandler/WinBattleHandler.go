@@ -31,20 +31,18 @@ func (handler *WinBattleHandler) Action(session network.SocketSessionInterface, 
 						return
 					}
 					//更新英雄经验
-					if len(protoMsg.HeroIds) > 0 {
-						c := dbSession.DB("sanguozhizhan").C("Hero")
-						for _, v := range protoMsg.HeroIds {
-							exp, has := role.AddHeroExp(v, 50)
-							if has {
-								data := bson.M{"$set": bson.M{"exp": exp}}
-								c.Update(bson.M{"roleid": innerMsg.RoleId, "heroid": v}, data)
-							}
-						}
-					}
+					//if len(protoMsg.HeroIds) > 0 {
+					//	c := dbSession.DB("sanguozhizhan").C("Hero")
+					//	for _, v := range protoMsg.HeroIds {
+					//		exp, has := role.AddHeroExp(v, 50)
+					//		if has {
+					//			data := bson.M{"$set": bson.M{"exp": exp}}
+					//			c.Update(bson.M{"roleid": innerMsg.RoleId, "heroid": v}, data)
+					//		}
+					//	}
+					//}
+					//获得宝箱
 					msg := new(message.M2C_BattleResult)
-					msg.HeroIds = protoMsg.HeroIds
-					msg.Gold = 300
-					msg.Exp = 100
 					handler.GameServer.WriteInnerMsg(role.GetGateSession(), role.GetRoleId(), 5019, msg)
 				}
 			} else {

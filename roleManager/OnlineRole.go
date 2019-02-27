@@ -172,6 +172,12 @@ func (role *OnlineRole)GetBattleId() int32{
 func (role *OnlineRole)SetBattleId(id int32){
 	role.BattleInfo.BattleId = id
 }
+func (role *OnlineRole)GetSign() string{
+	return role.Role.Sign
+}
+func (role *OnlineRole)SetSign(sign string){
+	role.Role.Sign = sign
+}
 func (role *OnlineRole)GetMaxBagNum() int32{
 	return role.Role.MaxBagNum
 }
@@ -325,7 +331,7 @@ func (role *OnlineRole)GetSoldierData(index int) *message.FreeSoldierData{
 	data.PlayerType = arrowerData.PlayerType
 	data.BodyId = arrowerData.BodyId
 	data.TouKuiId = arrowerData.TouKuiId
-	data.WeapId = arrowerData.TouKuiId
+	data.WeapId = arrowerData.WeapId
 	return data
 }
 func (role *OnlineRole)ChangeFreeSoldierData(index int,data *message.FreeSoldierData)bool{
@@ -364,4 +370,5 @@ func (role *OnlineRole)GetFreeSoldierEquipId(index int, equipIndex int)int32{
 	}else if equipIndex == 5{
 		return roleData.TouKuiId
 	}
+	return -1
 }
