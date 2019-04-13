@@ -2,26 +2,25 @@ package roleManager
 
 import (
 	"cmgameserver/bean"
-	"github.com/bianchengxiaobei/cmgo/network"
-	"sync"
-	"github.com/bianchengxiaobei/cmgo/log4g"
-	"github.com/bianchengxiaobei/cmgo/db"
-	"gopkg.in/mgo.v2/bson"
-	"time"
 	"cmgameserver/message"
+	"github.com/bianchengxiaobei/cmgo/db"
+	"github.com/bianchengxiaobei/cmgo/log4g"
+	"github.com/bianchengxiaobei/cmgo/network"
+	"gopkg.in/mgo.v2/bson"
+	"sync"
+	"time"
 )
 
-
 type OnlineRole struct {
-	Role     bean.Role
-	Heros	map[int32]bean.Hero
-	GateId   int32
-	UserName string
-	BattleInfo	BattleInfo
-	Connected	bool
+	Role         bean.Role
+	Heros        map[int32]bean.Hero
+	GateId       int32
+	UserName     string
+	BattleInfo   BattleInfo
+	Connected    bool
 	NextLevelExp int32
-	GateSession	network.SocketSessionInterface
-	PingTime	time.Time
+	GateSession  network.SocketSessionInterface
+	PingTime     time.Time
 	//ArrowerSoldierData message.FreeSoldierData
 	//DaoDunSoldierData message.FreeSoldierData
 	//SpearSoldierData message.FreeSoldierData
@@ -29,210 +28,300 @@ type OnlineRole struct {
 	sync.RWMutex
 }
 type BattleInfo struct {
-	RoomId 		int32
-	BattleId	int32
-	IsInBattling	bool
-	IsInRooming		bool
-	IsLoadFinished  bool
+	RoomId         int32
+	BattleId       int32
+	AgreePause 		bool
+	IsInBattling   bool
+	IsInRooming    bool
+	IsLoadFinished bool
 }
-func (role *OnlineRole)GetRole()*bean.Role{
+
+func (role *OnlineRole) GetRole() *bean.Role {
 	return &role.Role
 }
-func (role *OnlineRole)SetGateSession(session network.SocketSessionInterface){
+func (role *OnlineRole) SetGateSession(session network.SocketSessionInterface) {
 	role.GateSession = session
 }
-func (role *OnlineRole)GetGateSession() network.SocketSessionInterface{
+func (role *OnlineRole) GetGateSession() network.SocketSessionInterface {
 	return role.GateSession
 }
-func (role *OnlineRole)GetRoleId() int64{
+func (role *OnlineRole) GetRoleId() int64 {
 	return role.Role.RoleId
 }
-func (role *OnlineRole)GetServerId() int32{
+func (role *OnlineRole) GetServerId() int32 {
 	return role.Role.ServerId
 }
-func (role *OnlineRole)GetUserId() int64{
+func (role *OnlineRole) GetUserId() int64 {
 	return role.Role.UserId
 }
-func (role *OnlineRole)GetUseName() string{
+func (role *OnlineRole) GetUseName() string {
 	return role.UserName
 }
-func (role *OnlineRole)GetGateId() int32{
+func (role *OnlineRole) GetGateId() int32 {
 	return role.GateId
 }
-func (role *OnlineRole)SetRoleId(roleId int64) {
+func (role *OnlineRole) SetRoleId(roleId int64) {
 	role.Role.RoleId = roleId
 }
-func (role *OnlineRole)SetServerId(serverId int32) {
+func (role *OnlineRole) SetServerId(serverId int32) {
 	role.Role.ServerId = serverId
 }
-func (role *OnlineRole)SetUserId(userId int64){
+func (role *OnlineRole) SetUserId(userId int64) {
 	role.Role.UserId = userId
 }
-func (role *OnlineRole)SetUseName(name string) {
+func (role *OnlineRole) SetUseName(name string) {
 	role.UserName = name
 }
-func (role *OnlineRole)SetGateId(gateId int32) {
+func (role *OnlineRole) SetGateId(gateId int32) {
 	role.GateId = gateId
 }
-func (role *OnlineRole)GetNickName()string{
+func (role *OnlineRole)GetAllEmail()*[]bean.Email{
+	return &role.Role.Emails
+}
+func (role *OnlineRole) GetNickName() string {
 	return role.Role.NickName
 }
-func (role *OnlineRole)SetNickName(nickName string){
+func (role *OnlineRole) SetNickName(nickName string) {
 	role.Role.NickName = nickName
 }
-func (role *OnlineRole)GetSex()int32{
+func (role *OnlineRole) GetSex() int32 {
 	return role.Role.Sex
 }
-func (role *OnlineRole)SetSex(sex int32){
+func (role *OnlineRole) SetSex(sex int32) {
 	role.Role.Sex = sex
 }
-func (role *OnlineRole)GetRoomId()int32{
+func (role *OnlineRole) GetRoomId() int32 {
 	return role.BattleInfo.RoomId
 }
-func (role *OnlineRole)SetRoomId(roomId int32){
+func (role *OnlineRole) SetRoomId(roomId int32) {
 	role.BattleInfo.RoomId = roomId
 }
-func (role *OnlineRole)GetLevel() int32{
+func (role *OnlineRole) GetLevel() int32 {
 	return role.Role.Level
 }
-func (role *OnlineRole)SetLevel(level int32){
+func (role *OnlineRole) SetLevel(level int32) {
 	role.Role.Level = level
 }
-func (role *OnlineRole)GetDiam() int32{
+func (role *OnlineRole) GetDiam() int32 {
 	return role.Role.Diam
 }
-func (role *OnlineRole)SetDiam(diam int32){
+func (role *OnlineRole) SetDiam(diam int32) {
 	role.Role.Diam = diam
 }
-func (role *OnlineRole)GetGold() int32{
+func (role *OnlineRole) GetGold() int32 {
 	return role.Role.Gold
 }
-func (role *OnlineRole)SetGold(gold int32){
+func (role *OnlineRole) SetGold(gold int32) {
 	role.Role.Gold = gold
 }
-func (role *OnlineRole)GetExp() int32{
+func (role *OnlineRole) GetExp() int32 {
 	return role.Role.Exp
 }
-func (role *OnlineRole)SetExp(exp int32){
+func (role *OnlineRole) SetExp(exp int32) {
 	role.Role.Exp = exp
 }
-func (role *OnlineRole)GetAvatarId() int32{
+func (role *OnlineRole) GetAvatarId() int32 {
 	return role.Role.AvatarId
 }
-func (role *OnlineRole)SetAvatarId(avatarId int32){
+func (role *OnlineRole) SetAvatarId(avatarId int32) {
 	role.Role.AvatarId = avatarId
 }
-func (role *OnlineRole)GetAllHero() map[int32]bean.Hero{
+func (role *OnlineRole) GetAllHero() map[int32]bean.Hero {
 	return role.Heros
 }
+
 //是否掉线或者连接
-func (role *OnlineRole)IsConnected()bool{
+func (role *OnlineRole) IsConnected() bool {
 	role.RLock()
 	defer role.RUnlock()
 	return role.Connected
 }
-func (role *OnlineRole)SetConnected(conn bool){
+func (role *OnlineRole) SetConnected(conn bool) {
 	role.Lock()
 	defer role.Unlock()
 	role.Connected = conn
 }
-func (role *OnlineRole)IsInBattling()bool{
+func (role *OnlineRole) IsInBattling() bool {
 	role.RLock()
 	defer role.RUnlock()
 	return role.BattleInfo.IsInBattling
 }
-func (role *OnlineRole)SetInBattling(value bool){
+func (role *OnlineRole) SetInBattling(value bool) {
 	role.Lock()
 	defer role.Unlock()
 	role.BattleInfo.IsInBattling = value
 }
-func (role *OnlineRole)IsInRooming()bool{
+func (role *OnlineRole) IsInRooming() bool {
 	role.RLock()
 	defer role.RUnlock()
 	return role.BattleInfo.IsInRooming
 }
-func (role *OnlineRole)SetInRooming(value bool){
+func (role *OnlineRole) SetInRooming(value bool) {
 	role.Lock()
 	defer role.Unlock()
 	role.BattleInfo.IsInRooming = value
 }
-func (role *OnlineRole)IsLoadFinished()bool{
+func (role *OnlineRole) IsLoadFinished() bool {
 	role.RLock()
 	defer role.RUnlock()
 	return role.BattleInfo.IsLoadFinished
 }
-func (role *OnlineRole)SetLoadFinished(finished bool){
+func (role *OnlineRole) SetLoadFinished(finished bool) {
 	role.Lock()
 	defer role.Unlock()
 	role.BattleInfo.IsLoadFinished = finished
 }
-func (role *OnlineRole)GetBattleId() int32{
+func (role *OnlineRole) GetBattleId() int32 {
 	return role.BattleInfo.BattleId
 }
-func (role *OnlineRole)SetBattleId(id int32){
+func (role *OnlineRole) SetBattleId(id int32) {
 	role.BattleInfo.BattleId = id
 }
-func (role *OnlineRole)GetSign() string{
+func (role *OnlineRole)GetAgreePause()bool{
+	return  role.BattleInfo.AgreePause
+}
+func (role *OnlineRole)SetAgreePause(agree bool){
+	role.BattleInfo.AgreePause = agree
+}
+func (role *OnlineRole) GetSign() string {
 	return role.Role.Sign
 }
-func (role *OnlineRole)SetSign(sign string){
+func (role *OnlineRole) SetSign(sign string) {
 	role.Role.Sign = sign
 }
-func (role *OnlineRole)GetMaxBagNum() int32{
+func (role *OnlineRole) GetMaxBagNum() int32 {
 	return role.Role.MaxBagNum
 }
-func (role *OnlineRole)SetMaxBagNum(num int32){
+func (role *OnlineRole) SetMaxBagNum(num int32) {
 	role.Role.MaxBagNum = num
 }
-func (role *OnlineRole)GetPingTime()time.Time{
-return  role.PingTime
+func (role *OnlineRole) GetPingTime() time.Time {
+	return role.PingTime
 }
-func (role *OnlineRole)SetPingTime(time time.Time){
+func (role *OnlineRole) SetPingTime(time time.Time) {
 	role.PingTime = time
 }
-func (role *OnlineRole)AddGold(gold int32){
+func (role *OnlineRole) AddGold(gold int32) {
 	role.Role.Gold += gold
 }
-func (role *OnlineRole)AddExp(exp int32){
+func (role *OnlineRole) AddExp(exp int32) {
 	role.Role.Exp += exp
-	if role.Role.Exp >= role.NextLevelExp{
+	if role.Role.Exp >= role.NextLevelExp {
 		role.Role.Level++
 		role.UpdateNextExp()
 	}
 }
-func (role *OnlineRole)UpdateNextExp(){
-	role.NextLevelExp = 75 * role.Role.Level * role.Role.Level - 25 * role.Role.Level
+func (role *OnlineRole) UpdateNextExp() {
+	role.NextLevelExp = 75*role.Role.Level*role.Role.Level - 25*role.Role.Level
 }
-func (role *OnlineRole)AddHeroExp(heroId int32,exp int32) (int32,bool) {
-	if key,ok := role.Heros[heroId];ok{
-		return key.AddExp(exp),ok
-	}else{
-		log4g.Infof("Role[%d]不包含该英雄[%d]",role.GetRoleId(),heroId)
-		return -1,false
+func (role *OnlineRole) AddHeroExp(heroId int32, exp int32) (int32, bool) {
+	if key, ok := role.Heros[heroId]; ok {
+		return key.AddExp(exp), ok
+	} else {
+		log4g.Infof("Role[%d]不包含该英雄[%d]", role.GetRoleId(), heroId)
+		return -1, false
 	}
 }
-//func (role *OnlineRole)HasHero(heroId int32) bool{
-//	if _,ok := role.Heros[heroId];ok{
-//		return true
-//	}else{
-//		return false
-//	}
-//}
-func (role *OnlineRole)GetItem(index int32) *bean.Item {
+
+func (role *OnlineRole)AddItem(item message.Item, hasNum bool)int32{
+	if hasNum == false{
+		for i:=0;i<int(role.GetMaxBagNum());i++{
+			roleItem := &role.Role.Items[i]
+			if roleItem.ItemId == 0{
+				roleItem.ItemId = item.ItemId
+				roleItem.ItemSeed = item.ItemSeed
+				roleItem.ItemNum = item.ItemNum
+				roleItem.ItemTime = item.ItemTime
+				return int32(i)
+			}
+		}
+	}else {
+		for i := 0; i < int(role.GetMaxBagNum()); i++ {
+			roleItem := &role.Role.Items[i]
+			if roleItem.ItemId == item.ItemId {
+				roleItem.ItemSeed = item.ItemSeed
+				roleItem.ItemNum++
+				roleItem.ItemTime = item.ItemTime
+				return int32(i)
+			}
+		}
+		for i := 0; i < int(role.GetMaxBagNum()); i++ {
+			roleItem := &role.Role.Items[i]
+			if roleItem.ItemId == 0 {
+				roleItem.ItemId = item.ItemId
+				roleItem.ItemSeed = item.ItemSeed
+				roleItem.ItemNum = item.ItemNum
+				roleItem.ItemTime = item.ItemTime
+				return int32(i)
+			}
+		}
+	}
+	return -1
+}
+func (role *OnlineRole)AddItemNoMsg(itemId int32,itemSeed int32,itemTime int64,hasNum bool)int32{
+	if hasNum == false {
+		for i := 0; i < int(role.GetMaxBagNum()); i++ {
+			roleItem := &role.Role.Items[i]
+			if roleItem.ItemId == 0 {
+				roleItem.ItemId = itemId
+				roleItem.ItemSeed = itemSeed
+				roleItem.ItemNum = 1
+				roleItem.ItemTime = itemTime
+				return int32(i)
+			}
+		}
+	}else{
+		for i := 0; i < int(role.GetMaxBagNum()); i++ {
+			roleItem := &role.Role.Items[i]
+			if roleItem.ItemId == itemId {
+				roleItem.ItemId = itemId
+				roleItem.ItemSeed = itemSeed
+				roleItem.ItemNum++
+				roleItem.ItemTime = itemTime
+				return int32(i)
+			}
+		}
+		for i := 0; i < int(role.GetMaxBagNum()); i++ {
+			roleItem := &role.Role.Items[i]
+			if roleItem.ItemId == 0 {
+				roleItem.ItemId = itemId
+				roleItem.ItemSeed = itemSeed
+				roleItem.ItemNum = 1
+				roleItem.ItemTime = itemTime
+				return int32(i)
+			}
+		}
+	}
+	return -1
+}
+func (role *OnlineRole) GetItem(index int32) bean.Item {
 	if index >= role.GetMaxBagNum() {
-		return nil
-	}else{
-		return &role.Role.Items[index]
+		nilItem := new(bean.Item)
+		return *nilItem
+	} else {
+		return role.Role.Items[index]
 	}
 }
-func (role *OnlineRole)GetHero(heroId int32)*bean.Hero{
-	if hero,ok := role.Heros[heroId];ok{
+func (role *OnlineRole) SetItem(index int32, item bean.Item) {
+	if index > role.GetMaxBagNum() {
+		return
+	} else {
+		roleItem := &role.Role.Items[index]
+		roleItem.ItemId = item.ItemId
+		roleItem.ItemSeed = item.ItemSeed
+		roleItem.ItemNum = item.ItemNum
+		roleItem.ItemTime = item.ItemTime
+	}
+
+}
+func (role *OnlineRole) GetHero(heroId int32) *bean.Hero {
+	if hero, ok := role.Heros[heroId]; ok {
 		return &hero
-	}else{
+	} else {
 		return nil
 	}
 }
-func (role *OnlineRole)UpdateDB(manager *db.MongoBDManager)  {
+func (role *OnlineRole) UpdateDB(manager *db.MongoBDManager) {
 	dbSession := manager.Get()
 	if dbSession != nil {
 		//更新角色
@@ -241,29 +330,31 @@ func (role *OnlineRole)UpdateDB(manager *db.MongoBDManager)  {
 		if err != nil {
 			log4g.Errorf("更新Role出错[%s],RoleId:%d", err.Error(), role.Role.RoleId)
 			return
+		} else {
+			log4g.Infof("更新Role数据库成功:[%d]", role.Role.RoleId)
 		}
 	}
 }
-func (role *OnlineRole)QuitBattle(){
+func (role *OnlineRole) QuitBattle() {
 	role.BattleInfo.RoomId = 0
 	role.BattleInfo.BattleId = 0
 	role.SetLoadFinished(false)
 	role.SetInBattling(false)
 	role.SetInRooming(false)
 }
-func (role *OnlineRole)HasHero(heroId int32) bool{
+func (role *OnlineRole) HasHero(heroId int32) bool {
 	hero := role.Heros[heroId]
-	if &hero == nil{
-		return  false
+	if &hero == nil {
+		return false
 	}
 	return true
 }
-func (role *OnlineRole)BuyHero(heroId int32) bool{
+func (role *OnlineRole) BuyHero(heroId int32) bool {
 	hasHero := role.HasHero(heroId)
-	if hasHero == false{
+	if hasHero == false {
 		return false
 	}
-	if role.GetGold() < 8000{
+	if role.GetGold() < 8000 {
 		return false
 	}
 	role.AddGold(-8000)
@@ -275,56 +366,57 @@ func (role *OnlineRole)BuyHero(heroId int32) bool{
 	role.Heros[heroId] = hero
 	return true
 }
-func (role *OnlineRole)WinLevel(level int32){
-	if level == 0{
+func (role *OnlineRole) WinLevel(level int32) {
+	if level == 0 {
 		return
 	}
 	has := false
-	for _,v := range role.Role.WinLevel{
-		if level == v{
+	for _, v := range role.Role.WinLevel {
+		if level == v {
 			has = true
 			break
 		}
 	}
-	if has == false{
+	if has == false {
 		role.Role.WinLevel = append(role.Role.WinLevel, level)
 	}
 }
-func (role *OnlineRole)AddGetTaskAward(taskId int32) bool{
-	for k,v := range role.Role.DayGetTask{
-		if v == 0{
+func (role *OnlineRole) AddGetTaskAward(taskId int32) bool {
+	for k, v := range role.Role.DayGetTask {
+		if v == 0 {
 			role.Role.DayGetTask[k] = taskId
 			return true
-		}else if v == taskId{
+		} else if v == taskId {
 			return false
 		}
 	}
 	role.Role.DayGetTask = append(role.Role.DayGetTask, taskId)
 	return true
 }
-func (role *OnlineRole)AddGetAchieveAward(achieveId int32) bool{
-	for _,v := range role.Role.Achievement{
-		if v == achieveId{
+func (role *OnlineRole) AddGetAchieveAward(achieveId int32) bool {
+	for _, v := range role.Role.Achievement {
+		if v == achieveId {
 			return false
 		}
 	}
 	role.Role.Achievement = append(role.Role.Achievement, achieveId)
 	return true
 }
+
 //获取签到奖励
-func (role *OnlineRole)GetSignAward()bool{
-	if role.Role.GetSign == false{
+func (role *OnlineRole) GetSignAward() bool {
+	if role.Role.GetSign == false {
 		role.AddGold(100)
 		role.Role.GetSign = true
 		return true
-	}else{
+	} else {
 		return false
 	}
 }
-func (role *OnlineRole)GetTaskSeed()int32{
+func (role *OnlineRole) GetTaskSeed() int32 {
 	return role.Role.TaskSeed
 }
-func (role *OnlineRole)GetSoldierData(index int) *message.FreeSoldierData{
+func (role *OnlineRole) GetSoldierData(index int) *message.FreeSoldierData {
 	data := &message.FreeSoldierData{}
 	arrowerData := role.Role.FreeSoldierData[index]
 	data.CarrierType = arrowerData.CarrierType
@@ -334,41 +426,113 @@ func (role *OnlineRole)GetSoldierData(index int) *message.FreeSoldierData{
 	data.WeapId = arrowerData.WeapId
 	return data
 }
-func (role *OnlineRole)ChangeFreeSoldierData(index int,data *message.FreeSoldierData)bool{
-	if index > 3{
+func (role *OnlineRole) ChangeFreeSoldierData(index int, data message.FreeSoldierData) bool {
+	if index > 3 {
 		return false
 	}
-	roleData := role.Role.FreeSoldierData[index]
+	roleData := &role.Role.FreeSoldierData[index]
 	roleData.CarrierType = data.CarrierType
 	roleData.WeapId = data.WeapId
 	roleData.TouKuiId = data.TouKuiId
 	roleData.BodyId = data.BodyId
 	return true
 }
-func (role *OnlineRole)ChangeFreeSoldierEquipId(index int, equipIndex int, equipId int32){
-	if index > 3{
+func (role *OnlineRole) ChangeFreeSoldierEquipId(index int, equipIndex int, equipId int32) {
+	if index > 3 {
 		return
 	}
-	roleData := role.Role.FreeSoldierData[index]
-	if equipIndex == 0{
+	roleData := &role.Role.FreeSoldierData[index]
+	if equipIndex == 0 {
 		roleData.BodyId = equipId
-	}else if equipIndex == 1{
+	} else if equipIndex == 1 {
 		roleData.WeapId = equipId
-	}else if equipIndex == 5{
+	} else if equipIndex == 5 {
 		roleData.TouKuiId = equipId
 	}
 }
-func (role *OnlineRole)GetFreeSoldierEquipId(index int, equipIndex int)int32{
-	if index > 3{
+func (role *OnlineRole) GetFreeSoldierEquipId(index int, equipIndex int) int32 {
+	if index > 3 {
 		return -1
 	}
 	roleData := role.Role.FreeSoldierData[index]
-	if equipIndex == 0{
+	if equipIndex == 0 {
 		return roleData.BodyId
-	}else if equipIndex == 1{
+	} else if equipIndex == 1 {
 		return roleData.WeapId
-	}else if equipIndex == 5{
+	} else if equipIndex == 5 {
 		return roleData.TouKuiId
 	}
 	return -1
+}
+///取得官方装备id
+func (role *OnlineRole) GetFreeSoldierGuangFanEquipId(index int, equipIndex int) (int32,bool){
+	if index > 3 {
+		return -1,false
+	}
+	roleData := role.Role.FreeSoldierData[index]
+	id := int32(0)
+	isGuangFan := false
+	//布甲
+	if equipIndex == 0 {
+		//Body
+		id = 0
+		if roleData.BodyId == 0{
+			isGuangFan = true
+		}
+	} else if equipIndex == 1 {
+		//Weap
+		//根据职业
+		if index == 0 {
+			//Arrow
+			id = 5001
+			if roleData.WeapId == 5001{
+				isGuangFan = true
+			}
+		} else if index == 1 {
+			//刀盾
+			id = 4001
+			if roleData.WeapId == 4001{
+				isGuangFan = true
+			}
+		} else if index == 2 {
+			//枪兵
+			id = 8001
+			if roleData.WeapId == 8001{
+				isGuangFan = true
+			}
+		} else if index == 3 {
+			//法师
+			id = 7001
+			if roleData.WeapId == 7001{
+				isGuangFan = true
+			}
+		}
+	} else if equipIndex == 5 {
+		//TouKui
+		if roleData.CarrierType == 0 {
+			id = 1
+			if roleData.TouKuiId == 1{
+				isGuangFan = true
+			}
+		} else {
+			id = 2001
+			if roleData.TouKuiId == 2001{
+				isGuangFan = true
+			}
+		}
+	}
+	return id,isGuangFan
+}
+func (role *OnlineRole)GetEmail(emailId int32)(*bean.Email,int){
+	for k,v := range role.Role.Emails{
+		if v.EmailId == emailId{
+			return &v,k
+		}
+	}
+	return nil,-1
+}
+func (role *OnlineRole)DeleteEmail(index int){
+	email := role.Role.Emails
+	next := index + 1
+	role.Role.Emails = append(email[:index],email[next:]...)
 }

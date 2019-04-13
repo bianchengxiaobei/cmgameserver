@@ -11,12 +11,15 @@ type Role struct {
 	Level	int32
 	AvatarId	int32
 	Gold	int32
+	RankScore int32
 	Diam    int32
 	Exp     int32
 	Sex 	int32
+	HeroCount int32
 	Sign string
 	MaxBagNum int32
 	Items  []Item
+	Emails []Email
 	WinLevel []int32
 	DayGetTask	[]int32
 	TaskSeed	int32

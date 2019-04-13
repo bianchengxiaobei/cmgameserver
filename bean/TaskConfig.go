@@ -1,4 +1,4 @@
-package gameserver
+package bean
 
 type TaskConfig struct {
 	Tasks map[int32]TaskConfigData
@@ -8,7 +8,7 @@ const (
 	Gold AwardType = iota
 	Exp
 	Diam
-	Item
+	ItemType
 )
 type TaskConfigData struct {
 	TaskId	int32

@@ -22,6 +22,7 @@ type IOnlineRole interface {
 	SetUserId(int64)
 	SetUseName(string)
 	SetGateId(int32)
+	GetAllEmail()*[]bean.Email
 	GetNickName() string
 	SetNickName(nickName string)
 	GetRoomId() int32
@@ -49,6 +50,8 @@ type IOnlineRole interface {
 	SetInRooming(value bool)
 	GetBattleId() int32
 	SetBattleId(id int32)
+	GetAgreePause()bool
+	SetAgreePause(agree bool)
 	GetSex()int32
 	SetSex(sex int32)
 	SetSign(sign string)
@@ -60,7 +63,10 @@ type IOnlineRole interface {
 	UpdateNextExp()
 	AddHeroExp(heroId int32, exp int32) (int32,bool)
 	//HasHero(heroId int32) bool
-	GetItem(index int32) *bean.Item
+	GetItem(index int32) bean.Item
+	SetItem(index int32,item bean.Item)
+	AddItem (item message.Item,hasNum bool)int32
+	AddItemNoMsg(itemId int32,itemSeed int32,itemTime int64,hasNum bool)int32
 	GetHero(heroId int32)*bean.Hero
 	UpdateDB(manager *db.MongoBDManager)
 	QuitBattle()
@@ -71,7 +77,10 @@ type IOnlineRole interface {
 	GetSignAward()bool
 	GetTaskSeed()int32
 	GetSoldierData(index int) *message.FreeSoldierData
-	ChangeFreeSoldierData(index int,data *message.FreeSoldierData)bool
+	ChangeFreeSoldierData(index int,data message.FreeSoldierData)bool
 	ChangeFreeSoldierEquipId(index int, equipIndex int, equipId int32)
 	GetFreeSoldierEquipId(index int, equipIndex int)int32
+	GetFreeSoldierGuangFanEquipId(index int, equipIndex int) (int32,bool)
+	GetEmail(emailId int32)(*bean.Email,int)
+	DeleteEmail(index int)
 }

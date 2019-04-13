@@ -16,23 +16,40 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"cmgameserver/bean"
 )
 
 type GameServer struct {
-	gameConfig            *GameBaseConfig
-	IsRunning             bool
-	GameClientServer      map[int]*network.TcpClient
-	gameBaseConfigPath    string
-	gameSessionConfigPath string
-	gameAchieveConfigPath string
-	gameTaskConfigPath    string
-	taskConfig            *TaskConfig
-	achieveConfig         *AchieveConfig
-	DBManager             *db.MongoBDManager
-	RoleManager           face.IRoleManager
-	RoomManager           face.IRoomManager
-	BattleManager         face.IBattleManager
-	GameVersion           string
+	gameConfig               *GameBaseConfig
+	IsRunning                bool
+	GameClientServer          map[int]*network.TcpClient
+	gameBaseConfigPath        string
+	gameSessionConfigPath     string
+	gameAchieveConfigPath     string
+	gameTaskConfigPath        string
+	gameBoxItemInfoPath       string
+	gameHeroEquipInfoPath     string
+	gameSoldierEquipInfoPath  string
+	gameEmailConfigPath string
+	gameMaterialConfigPath string
+	TaskConfig                *bean.TaskConfig
+	BoxItemInfoConfig         *bean.BoxItemInfoConfig
+	AchieveConfig             *bean.AchieveConfig
+	HeroQualityEquipConfig    *bean.HeroQualityMapEquipConfig
+	HeroItemIdEquipConfig     *bean.HeroItemIdMapEquipConfig
+	SoldierQualityEquipConfig *bean.SoldierQualityEquipConfig
+	SoldierItemEquipConfig *bean.SoldierItemIdEquipConfig
+	EmailConfig					*bean.ServerEmailConfig
+	MaterialConfig         *bean.ServerMaterialConfig
+	DBManager                *db.MongoBDManager
+	RoleManager              face.IRoleManager
+	RoomManager              face.IRoomManager
+	BattleManager            face.IBattleManager
+	GameVersion              string
+	RankLevelRankList		[30]bean.RankListItem//段位榜单
+	RoleLevelRankList		[30]bean.RankListItem//等级榜单
+	RoleHeroRankList		[30]bean.RankListItem//英雄榜单
+	RankListUpdateTime		int64
 }
 type GameBaseConfig struct {
 	Version              string
@@ -55,7 +72,9 @@ func NewGameServer() *GameServer {
 	}
 	return server
 }
-func (server *GameServer) Init(gameBaseConfig string, gameSessionConfig string, gameAchieveConfig string, gameTaskConfig string) {
+func (server *GameServer) Init(gameBaseConfig string, gameSessionConfig string, gameAchieveConfig string,
+	gameTaskConfig string,gameboxItemConfig string,gameHeroEquipConfig string,gameSoldierEquipConfig string,
+		gameEmailConfig string,gameMaterialConfig string) {
 	var (
 		gameConfig network.SocketSessionConfig
 	)
@@ -64,6 +83,11 @@ func (server *GameServer) Init(gameBaseConfig string, gameSessionConfig string, 
 	server.gameSessionConfigPath = filepath.Join(rootPath, gameSessionConfig)
 	server.gameAchieveConfigPath = filepath.Join(rootPath, gameAchieveConfig)
 	server.gameTaskConfigPath = filepath.Join(rootPath, gameTaskConfig)
+	server.gameBoxItemInfoPath = filepath.Join(rootPath,gameboxItemConfig)
+	server.gameHeroEquipInfoPath = filepath.Join(rootPath,gameHeroEquipConfig)
+	server.gameSoldierEquipInfoPath = filepath.Join(rootPath,gameSoldierEquipConfig)
+	server.gameEmailConfigPath = filepath.Join(rootPath,gameEmailConfig)
+	server.gameMaterialConfigPath = filepath.Join(rootPath,gameMaterialConfig)
 	LoadSessionConfig(server.gameSessionConfigPath, &gameConfig)
 	server.LoadBaseConfig(server.gameBaseConfigPath)
 	//加载任务的其他配置
@@ -136,7 +160,65 @@ func (server *GameServer) ChangeGameVersion(ver string) {
 func (server *GameServer) GetGameVersion() string {
 	return server.GameVersion
 }
+func (server *GameServer)GetBoxItemInfoConfig() bean.BoxItemInfoConfig{
+	return *server.BoxItemInfoConfig
+}
+func (server *GameServer)GetHeroQualityEquipConfig() bean.HeroQualityMapEquipConfig {
+	return *server.HeroQualityEquipConfig
+}
+func (server *GameServer)GetSoldierQualityEquipConfig() bean.SoldierQualityEquipConfig {
+	return *server.SoldierQualityEquipConfig
+}
+func (server *GameServer)GetHeroItemIdEquipConfig() bean.HeroItemIdMapEquipConfig {
+	return *server.HeroItemIdEquipConfig
+}
+func (server *GameServer)GetSoldierItemIdEquipConfig() bean.SoldierItemIdEquipConfig {
+	return *server.SoldierItemEquipConfig
+}
+func (server *GameServer)GetEmailConfig() bean.ServerEmailConfig {
+	return *server.EmailConfig
+}
+func (server *GameServer)GetMaterialConfig() bean.ServerMaterialConfig {
+	return *server.MaterialConfig
+}
 func (server *GameServer) LoadNormalConfig() {
+	server.LoadTaskConfig()
+	server.LoadAchieveConfig()
+	server.LoadBoxItemConfig()
+	server.LoadHeroEquipConfig()
+	server.LoadSoldierEquipConfig()
+	server.LoadEmailConfig()
+	server.LoadMaterialConfig()
+}
+func (server *GameServer)LoadAchieveConfig(){
+	var (
+		err  error
+		file *os.File
+		data []byte
+	)
+	defer file.Close()
+	_, err = os.Stat(server.gameAchieveConfigPath)
+	if err != nil {
+		fmt.Println(err)
+	}
+	if data == nil || len(data) == 0 {
+		file, err = os.Open(server.gameAchieveConfigPath)
+		if err != nil {
+			panic(err)
+		}
+		data, err = ioutil.ReadAll(file)
+		if err != nil {
+			panic(err)
+		}
+	}
+	config := new(bean.AchieveConfig)
+	err = json.Unmarshal(data, config)
+	if err != nil {
+		panic(err)
+	}
+	server.AchieveConfig = config
+}
+func (server *GameServer)LoadTaskConfig(){
 	var (
 		err  error
 		file *os.File
@@ -157,33 +239,173 @@ func (server *GameServer) LoadNormalConfig() {
 			panic(err)
 		}
 	}
-	config := new(TaskConfig)
+	config := new(bean.TaskConfig)
 	err = json.Unmarshal(data, config)
 	if err != nil {
 		panic(err)
 	}
-	server.taskConfig = config
-	file.Close()
-	_, err = os.Stat(server.gameAchieveConfigPath)
+	server.TaskConfig = config
+}
+func (server *GameServer)LoadBoxItemConfig(){
+	var (
+		err  error
+		file *os.File
+		data []byte
+	)
+	defer file.Close()
+	_, err = os.Stat(server.gameBoxItemInfoPath)
 	if err != nil {
 		fmt.Println(err)
 	}
-	file, err = os.Open(server.gameAchieveConfigPath)
+	if data == nil || len(data) == 0 {
+		file, err = os.Open(server.gameBoxItemInfoPath)
+		if err != nil {
+			panic(err)
+		}
+		data, err = ioutil.ReadAll(file)
+		if err != nil {
+			panic(err)
+		}
+	}
+	config := new(bean.BoxItemInfoConfig)
+	err = json.Unmarshal(data, config)
 	if err != nil {
 		panic(err)
 	}
-	data, err = ioutil.ReadAll(file)
+	server.BoxItemInfoConfig = config
+}
+func (server *GameServer)LoadHeroEquipConfig(){
+	var (
+		err  error
+		file *os.File
+		data []byte
+	)
+	defer file.Close()
+	_, err = os.Stat(server.gameHeroEquipInfoPath)
+	if err != nil {
+		fmt.Println(err)
+	}
+	if data == nil || len(data) == 0 {
+		file, err = os.Open(server.gameHeroEquipInfoPath)
+		if err != nil {
+			panic(err)
+		}
+		data, err = ioutil.ReadAll(file)
+		if err != nil {
+			panic(err)
+		}
+	}
+	config := new(bean.HeroQualityMapEquipConfig)
+	err = json.Unmarshal(data, config)
 	if err != nil {
 		panic(err)
 	}
-	config1 := new(AchieveConfig)
-	err = json.Unmarshal(data, config1)
-	server.achieveConfig = config1
-	if err != nil {
-		panic(err)
+	server.HeroQualityEquipConfig = config
+	server.HeroItemIdEquipConfig = &bean.HeroItemIdMapEquipConfig{
+		Data:make(map[int32]bean.ServerEquipData),
+	}
+	for _,v := range server.HeroQualityEquipConfig.Data{
+		if len(v) > 0{
+			for _,data := range v{
+				server.HeroItemIdEquipConfig.Data[data.ItemId] = data
+			}
+		}
 	}
 }
-
+func (server *GameServer)LoadSoldierEquipConfig(){
+	var (
+		err  error
+		file *os.File
+		data []byte
+	)
+	defer file.Close()
+	_, err = os.Stat(server.gameSoldierEquipInfoPath)
+	if err != nil {
+		fmt.Println(err)
+	}
+	if data == nil || len(data) == 0 {
+		file, err = os.Open(server.gameSoldierEquipInfoPath)
+		if err != nil {
+			panic(err)
+		}
+		data, err = ioutil.ReadAll(file)
+		if err != nil {
+			panic(err)
+		}
+	}
+	config := new(bean.SoldierQualityEquipConfig)
+	err = json.Unmarshal(data, config)
+	if err != nil {
+		panic(err)
+	}
+	server.SoldierQualityEquipConfig = config
+	server.SoldierItemEquipConfig = &bean.SoldierItemIdEquipConfig{
+		Data:make(map[int32]bean.ServerEquipData),
+	}
+	for _,v := range server.SoldierQualityEquipConfig.Data{
+		if len(v) > 0{
+			for _,data := range v{
+				server.SoldierItemEquipConfig.Data[data.ItemId] = data
+			}
+		}
+	}
+}
+func (server *GameServer)LoadEmailConfig(){
+	var (
+		err  error
+		file *os.File
+		data []byte
+	)
+	defer file.Close()
+	_, err = os.Stat(server.gameEmailConfigPath)
+	if err != nil {
+		fmt.Println(err)
+	}
+	if data == nil || len(data) == 0 {
+		file, err = os.Open(server.gameEmailConfigPath)
+		if err != nil {
+			panic(err)
+		}
+		data, err = ioutil.ReadAll(file)
+		if err != nil {
+			panic(err)
+		}
+	}
+	config := new(bean.ServerEmailConfig)
+	err = json.Unmarshal(data, config)
+	if err != nil {
+		panic(err)
+	}
+	server.EmailConfig = config
+}
+func (server *GameServer)LoadMaterialConfig(){
+	var (
+		err  error
+		file *os.File
+		data []byte
+	)
+	defer file.Close()
+	_, err = os.Stat(server.gameMaterialConfigPath)
+	if err != nil {
+		fmt.Println(err)
+	}
+	if data == nil || len(data) == 0 {
+		file, err = os.Open(server.gameMaterialConfigPath)
+		if err != nil {
+			panic(err)
+		}
+		data, err = ioutil.ReadAll(file)
+		if err != nil {
+			panic(err)
+		}
+	}
+	config := new(bean.ServerMaterialConfig)
+	err = json.Unmarshal(data, config)
+	if err != nil {
+		panic(err)
+	}
+	server.MaterialConfig = config
+}
 //加载json配置
 func LoadSessionConfig(filePath string, sessionConfig *network.SocketSessionConfig) {
 	var (
@@ -309,6 +531,22 @@ func (server *GameServer) GetRoomManager() face.IRoomManager {
 func (server *GameServer) GetBattleManager() face.IBattleManager {
 	return server.BattleManager
 }
+func (server *GameServer)GetRankListTime() int64{
+	return server.RankListUpdateTime
+}
+func (server *GameServer)SetRankListTime(time int64){
+	server.RankListUpdateTime = time
+}
+func (server *GameServer)GetRankLevelRankList () *[30]bean.RankListItem{
+	return &server.RankLevelRankList
+}
+func (server *GameServer)GetRoleHeroCountRankList() *[30]bean.RankListItem{
+	return &server.RoleHeroRankList
+}
+func (server *GameServer)GetRoleLevelRankList() *[30]bean.RankListItem{
+	return &server.RoleLevelRankList
+}
+
 func (server *GameServer) WriteInnerMsg(session network.SocketSessionInterface, roleId int64, msgId int, msg proto.Message) {
 	innerMsg := network.InnerWriteMessage{
 		MsgData: msg,

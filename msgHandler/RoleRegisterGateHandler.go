@@ -40,9 +40,11 @@ func (handler *RoleRegisterGateHandler) Action(session network.SocketSessionInte
 					hero.HeroId = v.HeroId
 					hero.Level = v.Level
 					for _, v1 := range v.ItemIds {
-						if v1 > 0 {
+						if v1.ItemId > 0 {
 							item := &message.Item{}
-							item.ItemId = v1
+							item.ItemId = v1.ItemId
+							item.ItemSeed = v1.ItemSeed
+							item.ItemNum = 1
 							hero.ItemIds = append(hero.ItemIds, item)
 						}
 					}
@@ -56,7 +58,17 @@ func (handler *RoleRegisterGateHandler) Action(session network.SocketSessionInte
 					item := &message.Item{}
 					item.Index = itemIndex
 					item.ItemId = te.ItemId
+					item.ItemSeed = te.ItemSeed
+					item.ItemNum = te.ItemNum
 					rMsg.Items = append(rMsg.Items, item)
+				}
+			}
+			//初始化邮件
+			allEmails := *role.GetAllEmail()
+			for _,v := range allEmails{
+				if &v != nil{
+					msgData := v.ToMessageData()
+					rMsg.Emails = append(rMsg.Emails,msgData)
 				}
 			}
 			//初始化自由士兵配置
@@ -125,7 +137,8 @@ func (handler *RoleRegisterGateHandler) InitRoomInfo(room *message.Room, roomDat
 	room.Owner.RoomId = roomData.GetRoomId()
 	room.Owner.RoomOwnerName = roomData.GetRoomOwnerName()
 	room.Owner.RoomOwnerId = roomData.GetRoomOwnerId()
-	room.Owner.RoomName = roomData.GetRoomName()
+	room.Owner.CityId = roomData.GetRoomOwnerCityId()
+	room.Owner.GameType = roomData.GetGameType()
 	room.Owner.IsWarFow = roomData.GetIsWarFow()
 	room.Owner.RoomOwnerAvatarId = roomData.GetRoomOwnerAvatarId()
 	room.Owner.CurPlayeNum = roomData.GetCurPlayerNum()
@@ -157,6 +170,7 @@ func (handler *RoleRegisterGateHandler) InitRoomInfo(room *message.Room, roomDat
 					msgMem.JoinerLevel = role.GetLevel()
 					msgMem.JoinerIconId = role.GetAvatarId()
 					msgMem.JoinerName = role.GetNickName()
+					msgMem.CityId = roomData.GetRoomMemberCityId(mem)
 					msgMem.JoinerId = mem
 					msgMem.Arrower = role.GetSoldierData(0)
 					msgMem.Daodun = role.GetSoldierData(1)

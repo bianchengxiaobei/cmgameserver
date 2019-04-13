@@ -9,6 +9,7 @@ import (
 	"github.com/bianchengxiaobei/cmgo/log4g"
 	"cmgameserver/message"
 	"time"
+	"math/rand"
 )
 type RoleManager struct {
 	lock        sync.RWMutex
@@ -78,7 +79,14 @@ func (manager *RoleManager)NewOnlineRole(roleId int64) face.IOnlineRole{
 				hero.RoleId = roleId
 				hero.HeroId = 1
 				hero.Level = 1
-				hero.ItemIds[2] = 15000
+				for i:=0;i<3;i++{
+					item := new(bean.Item)
+					hero.ItemIds[i] = *item
+				}
+				xiezi := &hero.ItemIds[2]
+				xiezi.ItemId = 15000
+				xiezi.ItemNum = 1
+				xiezi.ItemSeed = rand.Int31()
 				err = c.Insert(&hero)
 				if err != nil{
 					return nil
@@ -155,6 +163,7 @@ func (manager *RoleManager)RoleQuit(roleId int64){
 					}
 				}
 			}
+			role.SetLoadFinished(false)
 			//移除缓存，如果是战斗中，就不移除，等过游戏结束如果玩家还么有连接上来再移除
 			manager.RemoveOnlineRole(role)
 		}

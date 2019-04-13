@@ -3,9 +3,10 @@ package msgHandler
 import (
 	"cmgameserver/face"
 	"github.com/bianchengxiaobei/cmgo/log4g"
-	"gopkg.in/mgo.v2/bson"
 	"cmgameserver/message"
 	"github.com/bianchengxiaobei/cmgo/network"
+	"time"
+	"github.com/bianchengxiaobei/cmgo/tsrandom"
 )
 
 type WatchAdsHandler struct {
@@ -17,24 +18,36 @@ func (handler *WatchAdsHandler) Action(session network.SocketSessionInterface, m
 		if protoMsg, ok := innerMsg.MsgData.(*message.C2M_WatchAds); ok {
 			role := handler.GameServer.GetRoleManager().GetOnlineRole(innerMsg.RoleId)
 			if role != nil {
+				msg := new(message.M2C_WatchAdsResult)
+				nowTime := time.Now().UnixNano()
 				if protoMsg.IsBanner{
 					role.AddGold(20)
+					msg.Index = role.GetGold()
 				}else{
-					role.AddGold(50)
-				}
-				dbSession := handler.GameServer.GetDBManager().Get()
-				if dbSession != nil {
-					//更新角色经验和金钱
-					c := dbSession.DB("sanguozhizhan").C("Role")
-					data := bson.M{"$set": bson.M{"gold": role.GetGold()}}
-					err := c.Update(bson.M{"roleid": innerMsg.RoleId}, data)
-					if err != nil {
-						log4g.Errorf("更新出错[%s],RoleId:%d", err.Error(), innerMsg.RoleId)
-						return
+					//视频观看，说明得随机数
+					seed := 0
+					if protoMsg.Seed > 0{
+						seed = int(protoMsg.Seed)
+					}else{
+						seed = int(time.Now().UnixNano())
 					}
-					msg := new(message.M2C_WatchAdsResult)
-					handler.GameServer.WriteInnerMsg(role.GetGateSession(), role.GetRoleId(), 5021, msg)
+					random := tsrandom.New(seed)
+					gold := random.RangeInt(0,4)
+					if gold == 1{
+						gold = 0
+					}
+					if gold == 0{
+						msg.BoxId = 200006
+						msg.Index = role.AddItemNoMsg(msg.BoxId,msg.Seed,nowTime,true)
+					}else if gold == 2{
+						msg.BoxId = 200007
+						msg.Index = role.AddItemNoMsg(msg.BoxId,msg.Seed,nowTime,true)
+					}else if gold == 3{
+						msg.BoxId = 200008
+						msg.Index = role.AddItemNoMsg(msg.BoxId,msg.Seed,nowTime,true)
+					}
 				}
+				handler.GameServer.WriteInnerMsg(role.GetGateSession(), role.GetRoleId(), 5021, msg)
 			} else {
 				log4g.Errorf("不存在RoleId:%d", innerMsg.RoleId)
 			}

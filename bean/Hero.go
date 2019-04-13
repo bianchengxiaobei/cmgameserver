@@ -5,7 +5,7 @@ type Hero struct {
 	HeroId	int32
 	Level 	int32
 	Exp     int32
-	ItemIds [3]int32
+	ItemIds [3]Item
 	LearnSkill [10]int32
 	SkillPoint int32
 	NextLevelExp int32

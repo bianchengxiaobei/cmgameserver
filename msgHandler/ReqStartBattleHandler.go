@@ -16,9 +16,16 @@ func (handler *ReqStartBattleHandler) Action(session network.SocketSessionInterf
 			//判断是否可以开始游戏
 			role := handler.GameServer.GetRoleManager().GetOnlineRole(innerMsg.RoleId)
 			if role != nil{
+				if role.IsInBattling(){
+					return
+				}
 				room := handler.GameServer.GetRoomManager().GetRoomByRoomId(role.GetRoomId())
 				if room != nil{
+					if room.GetInBattle(){
+						return
+					}
 					if room.CheckRoomReady() == true{
+						room.SetInBattle(true)
 						//发送给所有客户端开始游戏
 						rMsg := new(message.M2C_StartBattleLoad)
 						rMsg.AllReady = true
@@ -27,9 +34,9 @@ func (handler *ReqStartBattleHandler) Action(session network.SocketSessionInterf
 						for _,v := range allRoomRoles{
 							if v > 0{
 								role := handler.GameServer.GetRoleManager().GetOnlineRole(v)
+								role.SetInRooming(false)
+								role.SetInBattling(true)
 								if role != nil && role.IsConnected(){
-									role.SetInRooming(false)
-									role.SetInBattling(true)
 									handler.GameServer.WriteInnerMsg(role.GetGateSession(),v,5009,rMsg)
 								}
 							}

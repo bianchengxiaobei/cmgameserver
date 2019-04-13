@@ -2,24 +2,26 @@ package msgHandler
 
 import (
 	"cmgameserver/face"
-	"cmgameserver/message"
 	"github.com/bianchengxiaobei/cmgo/network"
+	"cmgameserver/message"
+	"github.com/bianchengxiaobei/cmgo/log4g"
 )
 
-type BattleLoadFinishedHandler struct {
+type ForceEnterBattleHandler struct {
 	GameServer face.IGameServer
 }
 
-func (handler *BattleLoadFinishedHandler) Action(session network.SocketSessionInterface, msg interface{}) {
+func (handler *ForceEnterBattleHandler) Action(session network.SocketSessionInterface, msg interface{}) {
 	if innerMsg, ok := msg.(network.InnerWriteMessage); ok {
-		if _, ok := innerMsg.MsgData.(*message.C2M_LoadFinished); ok {
-			//检测房间内所有玩家是否加载完成
+		if _, ok := innerMsg.MsgData.(*message.C2M_ForceEnterBattle); ok {
 			role := handler.GameServer.GetRoleManager().GetOnlineRole(innerMsg.RoleId)
-			if role != nil{
-				role.SetLoadFinished(true)
-				if handler.GameServer.GetRoomManager().CheckAllRoomMemberLoadFinished(role.GetRoomId()){
-					//开始战斗（发送给所有玩家，关闭加载界面）
-					room := handler.GameServer.GetRoomManager().GetRoomByRoomId(role.GetRoomId())
+			if role != nil {
+				if role.GetBattleId() > 0{
+					//说明已经在战斗
+					return
+				}
+				room := handler.GameServer.GetRoomManager().GetRoomByRoomId(role.GetRoomId())
+				if room != nil{
 					roleIds := room.GetRoomRoleIds()
 					rMsg := new(message.M2C_StartBattle)
 					var roles [4]face.IOnlineRole
@@ -46,7 +48,11 @@ func (handler *BattleLoadFinishedHandler) Action(session network.SocketSessionIn
 						}
 					}
 				}
+			} else {
+				log4g.Errorf("不存在RoleId:%d", innerMsg.RoleId)
 			}
+		} else {
+			log4g.Error("不是C2M_GetBoxAwardItem！")
 		}
 	}
 }

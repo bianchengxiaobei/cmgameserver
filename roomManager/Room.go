@@ -16,15 +16,18 @@ type Room struct {
 	RoomOwnerId	int64
 	RoomOwnerAvatarId  int32
 	RoomOwnerName	string
+	RoomOwnerCityId   int32
 	GameType	int32
 	RoomMaxPlayerNum	int32
-	Locked				bool
+	Password			string
+	InBattle			bool
 	RoomPassword		string
 	RoomMembers			map[int64]*RoomMember
 	roomRoleIds			[4]int64
 	roomIndex 			int32
 	GroupIdPool			[6]int32
 	IsWarFow			bool
+	IsOutsideMonster	bool
 	RoomOwnerArrowerData  *message.FreeSoldierData
 	RoomOwnerDaodunData  *message.FreeSoldierData
 	RoomOwnerSpearData  *message.FreeSoldierData
@@ -82,6 +85,13 @@ func (room *Room) SetGameType(gameType int32) {
 func (room *Room) GetGameType() int32 {
 	return room.GameType
 }
+func (room *Room) SetRoomOwnerCityId(city int32) {
+	room.RoomOwnerCityId = city
+}
+
+func (room *Room) GetRoomOwnerCityId() int32 {
+	return room.RoomOwnerCityId
+}
 func (room *Room) SetMapId(mapId int32) {
 	room.MapId = mapId
 }
@@ -103,6 +113,12 @@ func (room *Room)SetIsWarFow(value bool){
 }
 func (room *Room)GetIsWarFow() bool{
 	return room.IsWarFow
+}
+func (room *Room)SetIsOutsideMonster(value bool){
+	room.IsOutsideMonster = value
+}
+func (room *Room)GetIsOutsideMonster() bool{
+	return room.IsOutsideMonster
 }
 func (room *Room)GetArrowerData() *message.FreeSoldierData{
 	return room.RoomOwnerArrowerData
@@ -127,6 +143,7 @@ func (room *Room) JoinOneMember(roleId int64) (int32,bool){
 		member := &RoomMember{
 			RoleId:roleId,
 			Prepare:false,
+			CityId:1,
 		}
 		room.RoomMembers[roleId] = member
 		room.roomRoleIds[room.roomIndex] = roleId
@@ -181,6 +198,16 @@ func (room *Room)GetCurPlayerNum() int32{
 	oNum := len(room.RoomMembers)
 	return 1 + int32(oNum)
 }
+func (room *Room)GetInBattle()bool{
+	room.RLock()
+	defer  room.RUnlock()
+	return room.InBattle
+}
+func (room *Room)SetInBattle(value bool){
+	room.Lock()
+	defer room.Unlock()
+	room.InBattle = value
+}
 //取得随机id
 func (room *Room)getRandomId() int32{
 	Random:
@@ -210,8 +237,10 @@ func (room *Room)CheckRoomReady()bool{
 }
 //设置房间内玩家是否准备
 func (room *Room)SetRoomMemberReady(ready bool,roleId int64) bool{
+	room.Lock()
+	defer room.Unlock()
 	member := room.RoomMembers[roleId]
-	if member != nil{
+	if member != nil && member.Prepare != ready{
 		member.Prepare = ready
 		return true
 	}else{
@@ -242,4 +271,12 @@ func (room *Room)GetRoomMemberReady(roleId int64) bool{
 		return false
 	}
 	return member.Prepare
+}
+func (room *Room)GetRoomMemberCityId(roleId int64)int32{
+	member := room.RoomMembers[roleId]
+	if member == nil{
+		log4g.Infof("member == nil,Id[%d]",roleId)
+		return -1
+	}
+	return member.CityId
 }

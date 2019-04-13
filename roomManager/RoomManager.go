@@ -48,7 +48,7 @@ func (roomManager *RoomManager)CreateRoom(roleId int64) face.IRoom{
 		GroupIdPool:[6]int32{0,1,2,3,4,5},
 		RoomMembers:make(map[int64]*RoomMember),
 	}
-	room.Seed = int32(time.Now().Unix())
+	room.Seed = int32(time.Now().UnixNano())
 	room.RoomOwnerGroupId = room.getRandomId()
 	room.roomRoleIds[room.roomIndex] = roleId
 	room.roomIndex++
@@ -81,6 +81,7 @@ func (roomManager *RoomManager)DeleteRoom(roomId int32) bool{
 					}
 					role.SetRoomId(0)
 					role.SetInRooming(false)
+					role.SetInBattling(false)
 					if role.IsConnected() && role.GetBattleId() == 0{
 						//通知
 						roomManager.GameServer.WriteInnerMsg(role.GetGateSession(),v,5015,rMsg)
@@ -92,45 +93,52 @@ func (roomManager *RoomManager)DeleteRoom(roomId int32) bool{
 				}
 			}
 		}
+		room.SetInBattle(false)
 		delete(roomManager.rooms, roomId)
 		roomManager.recycleRoomIds.PushBack(roomId)
 	}
 	return true
 }
-//移除成员
-func (roomManager *RoomManager)RemoveOneMember(roomId int32,role face.IOnlineRole) bool{
-	roomManager.Lock()
-	defer roomManager.Unlock()
-	room := roomManager.GetRoomByRoomId(roomId)
-	if room != nil{
-		if room.LeaveOneMember(role.GetRoleId()){
-			//通知（包括自己）
-			rMsg := &message.M2C_RoleQuitRoom{}
-			rMsg.RoleId = role.GetRoleId()
-			rMsg.RoomId = roomId
-			roleIds := room.GetRoomRoleIds()
-			for _,v:= range roleIds{
-				if v > 0{
-					r := roomManager.GameServer.GetRoleManager().GetOnlineRole(v)
-					if r != nil{
-						roomManager.GameServer.WriteInnerMsg(r.GetGateSession(),r.GetRoleId(),5016,rMsg)
-					}
-				}
-			}
-			//roomManager.GameServer.WriteInnerMsg(role.GetGateSession(),role.GetRoleId(),5016,rMsg)
-			return true
-		}else{
-			return false
-		}
-	}else{
-		return false
-	}
-}
+////移除成员
+//func (roomManager *RoomManager)RemoveOneMember(roomId int32,role face.IOnlineRole) bool{
+//	roomManager.Lock()
+//	defer roomManager.Unlock()
+//	room := roomManager.GetRoomByRoomId(roomId)
+//	if room != nil{
+//		if room.LeaveOneMember(role.GetRoleId()){
+//			role.SetInRooming(false)
+//			role.SetRoomId(0)
+//			role.SetInBattling(false)
+//			//通知（包括自己）
+//			rMsg := &message.M2C_RoleQuitRoom{}
+//			rMsg.RoleId = role.GetRoleId()
+//			rMsg.RoomId = roomId
+//			roleIds := room.GetRoomRoleIds()
+//			for _,v:= range roleIds{
+//				if v > 0{
+//					r := roomManager.GameServer.GetRoleManager().GetOnlineRole(v)
+//					if r != nil && r.IsConnected(){
+//						roomManager.GameServer.WriteInnerMsg(r.GetGateSession(),r.GetRoleId(),5016,rMsg)
+//					}
+//				}
+//			}
+//			//roomManager.GameServer.WriteInnerMsg(role.GetGateSession(),role.GetRoleId(),5016,rMsg)
+//			return true
+//		}else{
+//			return false
+//		}
+//	}else{
+//		return false
+//	}
+//}
 func (roomManager *RoomManager)RemoveOneMemberByRoom(room face.IRoom,role face.IOnlineRole) bool{
 	roomManager.Lock()
 	defer roomManager.Unlock()
 	if room != nil{
 		if room.LeaveOneMember(role.GetRoleId()){
+			role.SetInRooming(false)
+			role.SetRoomId(0)
+			role.SetInBattling(false)
 			//通知（包括自己）
 			rMsg := &message.M2C_RoleQuitRoom{}
 			rMsg.RoleId = role.GetRoleId()
@@ -165,18 +173,21 @@ func (roomManager *RoomManager)GetAllRoom()map[int32]face.IRoom{
 //检查是否房间内所有玩家加载完成
 func (roomManager *RoomManager)CheckAllRoomMemberLoadFinished(roomId int32) bool{
 	room := roomManager.rooms[roomId]
-	roleIds := room.GetRoomRoleIds()
-	for _,v:= range roleIds{
-		if v > 0{
-			role := roomManager.GameServer.GetRoleManager().GetOnlineRole(v)
-			if role != nil{
-				bLoad := role.IsLoadFinished()
-				bConnect := role.IsConnected()
-				if bLoad == false && bConnect{
-					return false
+	if room != nil{
+		roleIds := room.GetRoomRoleIds()
+		for _,v:= range roleIds{
+			if v > 0{
+				role := roomManager.GameServer.GetRoleManager().GetOnlineRole(v)
+				if role != nil{
+					bLoad := role.IsLoadFinished()
+					bConnect := role.IsConnected()
+					if bLoad == false && bConnect{
+						return false
+					}
 				}
 			}
 		}
+		return true
 	}
-	return true
+	return false
 }

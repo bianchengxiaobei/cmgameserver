@@ -4,7 +4,6 @@ import (
 	"cmgameserver/face"
 	"cmgameserver/message"
 	"github.com/bianchengxiaobei/cmgo/network"
-	"github.com/bianchengxiaobei/cmgo/log4g"
 )
 
 type ReadyHandler struct {
@@ -32,8 +31,6 @@ func (handler *ReadyHandler) Action(session network.SocketSessionInterface, msg 
 								}
 							}
 						}
-					}else{
-						log4g.Infof("设置准备状态失败!RoleId:[%d],RoomId:[%d]",innerMsg.RoleId,room.GetRoomId())
 					}
 				}
 			}

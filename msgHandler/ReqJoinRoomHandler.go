@@ -30,10 +30,17 @@ func (handler *ReqJoinRoomHandler) Action(session network.SocketSessionInterface
 					rMsg.Member.JoinerName = role.GetNickName()
 					rMsg.Member.JoinerIconId = role.GetAvatarId()
 					rMsg.Member.GroupId = groupId
+					rMsg.Member.CityId = 1
 					rMsg.Member.JoinerLevel = role.GetLevel()
 					rMsg.RoomId = room.GetRoomId()
 					rMsg.RoomSetting.MapId = room.GetMapId()
 					rMsg.RoomSetting.IsWarFow = room.GetIsWarFow()
+					rMsg.RoomSetting.GameType = room.GetGameType()
+					rMsg.RoomSetting.BOutsideMonster = room.GetIsOutsideMonster()
+					rMsg.Member.Arrower = role.GetSoldierData(0)
+					rMsg.Member.Daodun = role.GetSoldierData(1)
+					rMsg.Member.Spear = role.GetSoldierData(2)
+					rMsg.Member.Fashi = role.GetSoldierData(3)
 					allRoomRoles := room.GetRoomRoleIds()
 					for _,v := range allRoomRoles{
 						if v > 0{

@@ -6,6 +6,7 @@ import (
 	"github.com/bianchengxiaobei/cmgo/log4g"
 	"github.com/bianchengxiaobei/cmgo/network"
 	"gopkg.in/mgo.v2/bson"
+	"cmgameserver/bean"
 )
 
 type ChangeEquipItemPosHandler struct {
@@ -25,14 +26,16 @@ func (handler *ChangeEquipItemPosHandler) Action(session network.SocketSessionIn
 						log4g.Info("数据错误!")
 						return
 					}
-					bagId := role.GetItem(protoMsg.Index2).ItemId
-					heroId := hero.ItemIds[int(protoMsg.Index1)]
-					if bagId > 0 {
-						hero.ItemIds[int(protoMsg.Index1)] = bagId
-						role.GetItem(protoMsg.Index2).ItemId = heroId
+					bagItem := role.GetItem(protoMsg.Index2)
+					heroItem := &hero.ItemIds[int(protoMsg.Index1)]
+					if bagItem.ItemId > 0 {
+						hero.ItemIds[int(protoMsg.Index1)] = bagItem
+						role.SetItem(protoMsg.Index2,*heroItem)
 					} else {
-						hero.ItemIds[int(protoMsg.Index1)] = 0
-						role.GetItem(protoMsg.Index2).ItemId = heroId
+						role.SetItem(protoMsg.Index2,*heroItem)
+						heroItem.ItemId = 0
+						heroItem.ItemNum = 0
+						heroItem.ItemSeed = 0
 					}
 					//更新英雄数据库
 					dbSession := handler.GameServer.GetDBManager().Get()
@@ -45,25 +48,30 @@ func (handler *ChangeEquipItemPosHandler) Action(session network.SocketSessionIn
 					//直接双方替换
 					bag1 := role.GetItem(protoMsg.Index1)
 					bag2 := role.GetItem(protoMsg.Index2)
-					item1Id := bag1.ItemId
-					item2Id := bag2.ItemId
-					bag1.ItemId = item2Id
-					bag2.ItemId = item1Id
+					role.SetItem(protoMsg.Index1,bag2)
+					role.SetItem(protoMsg.Index2,bag1)
 				case message.C2M2C_ChangeEquipItemPos_BagToHero:
 					if protoMsg.Index2 > 2 {
 						log4g.Info("数据错误!")
 						return
 					}
-					bag := role.GetItem(protoMsg.Index1)
-					itemId := bag.ItemId
-					heroId := hero.ItemIds[int(protoMsg.Index2)]
-					if heroId > 0 {
+					bagItem := role.GetItem(protoMsg.Index1)
+					heroItem := &hero.ItemIds[int(protoMsg.Index2)]
+					if heroItem.ItemId > 0 {
 						//替换
-						bag.ItemId = heroId
-						hero.ItemIds[int(protoMsg.Index2)] = itemId
+						role.SetItem(protoMsg.Index1,*heroItem)
+						heroItem.ItemId = bagItem.ItemId
+						heroItem.ItemSeed = bagItem.ItemSeed
+						heroItem.ItemNum = bagItem.ItemNum
 					} else {
-						bag.ItemId = 0
-						hero.ItemIds[int(protoMsg.Index2)] = itemId
+						nullItem := new(bean.Item)
+						nullItem.ItemNum = 0
+						nullItem.ItemId = 0
+						nullItem.ItemSeed = 0
+						role.SetItem(protoMsg.Index1,*nullItem)
+						heroItem.ItemId = bagItem.ItemId
+						heroItem.ItemSeed = bagItem.ItemSeed
+						heroItem.ItemNum = bagItem.ItemNum
 					}
 					//更新英雄数据库
 					dbSession := handler.GameServer.GetDBManager().Get()
@@ -73,32 +81,53 @@ func (handler *ChangeEquipItemPosHandler) Action(session network.SocketSessionIn
 						c.Update(bson.M{"roleid": innerMsg.RoleId, "heroid": protoMsg.HeroId}, data)
 					}
 				case message.C2M2C_ChangeEquipItemPos_SoldierToBag:
-					bagId := role.GetItem(protoMsg.Index2).ItemId
+					bagItem := role.GetItem(protoMsg.Index2)
 					soldierIndex := int(protoMsg.HeroId)
 					equipIndex := int(protoMsg.Index1)
-					if bagId > 0 {
+					if bagItem.ItemId > 0 {
 						//背包>0是替换
 						tempEquipId := role.GetFreeSoldierEquipId(soldierIndex,equipIndex)
-						role.ChangeFreeSoldierEquipId(soldierIndex,equipIndex,bagId)
-						role.GetItem(protoMsg.Index2).ItemId = tempEquipId
+						role.ChangeFreeSoldierEquipId(soldierIndex,equipIndex,bagItem.ItemId)
+						soldierItem := new(bean.Item)
+						soldierItem.ItemId = tempEquipId
+						soldierItem.ItemNum = 1
+						soldierItem.ItemSeed = 0
+						role.SetItem(protoMsg.Index2,*soldierItem)
 					} else {
+						//让士兵换上官方id
+						guangfanId,_ := role.GetFreeSoldierGuangFanEquipId(soldierIndex,equipIndex)
 						tempEquipId := role.GetFreeSoldierEquipId(soldierIndex,equipIndex)
-						role.GetItem(protoMsg.Index2).ItemId = tempEquipId
-						role.ChangeFreeSoldierEquipId(soldierIndex,equipIndex,0)
+						role.ChangeFreeSoldierEquipId(soldierIndex,equipIndex,guangfanId)
+						soldierItem := new(bean.Item)
+						soldierItem.ItemId = tempEquipId
+						soldierItem.ItemNum = 1
+						soldierItem.ItemSeed = 0
+						//然后背包设置上原先士兵的装备id
+						role.SetItem(protoMsg.Index2,*soldierItem)
 					}
 				case message.C2M2C_ChangeEquipItemPos_BagToSoldier:
-					bag := role.GetItem(protoMsg.Index1)
-					bagItemId := bag.ItemId
+					bagItem := role.GetItem(protoMsg.Index1)
 					soldierIndex := int(protoMsg.HeroId)
 					equipIndex := int(protoMsg.Index2)
+
 					soldierEquipId := role.GetFreeSoldierEquipId(soldierIndex,equipIndex)
-					if soldierEquipId > 0{
+					_,isGuangFan := role.GetFreeSoldierGuangFanEquipId(soldierIndex,equipIndex)
+					//判断替换的士兵上是否是官方额，如果是官方的就不放在背包上
+					if isGuangFan == false{
 						//替换
-						role.ChangeFreeSoldierEquipId(soldierIndex,equipIndex,bagItemId)
-						bag.ItemId = soldierEquipId
+						role.ChangeFreeSoldierEquipId(soldierIndex,equipIndex,bagItem.ItemId)
+						soldierItem := new(bean.Item)
+						soldierItem.ItemId = soldierEquipId
+						soldierItem.ItemSeed = 0
+						soldierItem.ItemNum = 1
+						role.SetItem(protoMsg.Index1,*soldierItem)
 					}else{
-						bag.ItemId = 0
-						role.ChangeFreeSoldierEquipId(soldierIndex,equipIndex,bagItemId)
+						soldierItem := new(bean.Item)
+						soldierItem.ItemId = 0
+						soldierItem.ItemSeed = 0
+						soldierItem.ItemNum = 0
+						role.SetItem(protoMsg.Index1,*soldierItem)
+						role.ChangeFreeSoldierEquipId(soldierIndex,equipIndex,bagItem.ItemId)
 					}
 				}
 				handler.GameServer.WriteInnerMsg(role.GetGateSession(), role.GetRoleId(), 5026, protoMsg)

@@ -45,6 +45,14 @@ func (handler ServerMessageHandler) Init() {
 	handler.pool.Register(5039,&msgHandler.ChangeFreeSoldierDataHandler{GameServer:handler.gameServer})
 	handler.pool.Register(5040,&msgHandler.ChangeSexHandler{GameServer:handler.gameServer})
 	handler.pool.Register(5042,&msgHandler.ChangeSignHandler{GameServer:handler.gameServer})
+	handler.pool.Register(5044,&msgHandler.GetBoxAwardHandler{GameServer:handler.gameServer})
+	handler.pool.Register(5046,&msgHandler.SellItemHandler{GameServer:handler.gameServer})
+	handler.pool.Register(5048,&msgHandler.GetEmailAwardHandler{GameServer:handler.gameServer})
+	handler.pool.Register(5050,&msgHandler.DeleteEmailHandler{GameServer:handler.gameServer})
+	handler.pool.Register(5052,&msgHandler.UseItemHandler{GameServer:handler.gameServer})
+	handler.pool.Register(5054,&msgHandler.ReqPauseBattleHandler{GameServer:handler.gameServer})
+	handler.pool.Register(5055,&msgHandler.AgreePauseBattleHandler{GameServer:handler.gameServer})
+	handler.pool.Register(5058,&msgHandler.ReqRankListHandler{GameServer:handler.gameServer})
 }
 func (handler ServerMessageHandler) MessageReceived(session network.SocketSessionInterface, message interface{}) error {
 	if writeMsg, ok := message.(network.WriteMessage); !ok {
@@ -69,8 +77,10 @@ func (handler ServerMessageHandler) SessionOpened(session network.SocketSessionI
 	return nil
 }
 
-func (handler ServerMessageHandler) SessionClosed(session network.SocketSessionInterface) {
-
+func (handler ServerMessageHandler) SessionClosed(session network.SocketSessionInterface,err error) {
+	if err != nil{
+		log4g.Info(err.Error())
+	}
 }
 
 func (handler ServerMessageHandler) SessionPeriod(session network.SocketSessionInterface) {
@@ -95,5 +105,5 @@ func (handler ServerMessageHandler) SessionPeriod(session network.SocketSessionI
 }
 
 func (handler ServerMessageHandler) ExceptionCaught(session network.SocketSessionInterface, err error) {
-
+	log4g.Info(err.Error())
 }

@@ -79,6 +79,22 @@ func (protocol ServerProtocol) Init() {
 	//protocol.pool.Register(5041,reflect.TypeOf(message.M2C_ChangeSexResult{}))
 	protocol.pool.Register(5042,reflect.TypeOf(message.C2M_ChangeSign{}))
 	//protocol.pool.Register(5043,reflect.TypeOf(message.M2C_ChangeSignResult{}))
+	protocol.pool.Register(5044,reflect.TypeOf(message.C2M_GetBoxAwardItem{}))
+	//protocol.pool.Register(5045,reflect.TypeOf(message.M2C_GetBoxAwardResult{}))
+	protocol.pool.Register(5046,reflect.TypeOf(message.C2M_SellItem{}))
+	//protocol.pool.Register(5047,reflect.TypeOf(message.M2C_SellItemResult{}))
+	protocol.pool.Register(5048,reflect.TypeOf(message.C2M_GetEmailAward{}))
+	//protocol.pool.Register(5049,reflect.TypeOf(message.M2C_SellItemResult{}))
+	protocol.pool.Register(5050,reflect.TypeOf(message.C2M2C_DeleteEmail{}))
+	//protocol.pool.Register(5051,reflect.TypeOf(message.M2C_AddEmai{}))
+	protocol.pool.Register(5052,reflect.TypeOf(message.C2M_UseItem{}))
+	//protocol.pool.Register(5053,reflect.TypeOf(message.M2C_UseItemResult{}))
+	protocol.pool.Register(5054,reflect.TypeOf(message.C2M2C_ReqPauseBattle{}))
+	protocol.pool.Register(5055,reflect.TypeOf(message.C2M_AgreePauseBattle{}))
+	//protocol.pool.Register(5056,reflect.TypeOf(message.M2C_StartPause{}))
+	protocol.pool.Register(5057,reflect.TypeOf(message.C2M_ForceEnterBattle{}))
+	protocol.pool.Register(5058,reflect.TypeOf(message.C2M_ReqRankList{}))
+	//protocol.pool.Register(5059,reflect.TypeOf(message.M2C_RankListResult{}))
 }
 func (protocol ServerProtocol) Decode(session network.SocketSessionInterface, data []byte) (interface{}, int, error) {
 	var (
