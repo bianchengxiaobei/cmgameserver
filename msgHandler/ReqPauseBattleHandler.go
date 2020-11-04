@@ -23,6 +23,7 @@ func (handler *ReqPauseBattleHandler) Action(session network.SocketSessionInterf
 					if state != face.InBattling{
 						return
 					}
+					battle.SetPauseRoleId(innerMsg.RoleId)
 					battle.SetAgreePause(true,innerMsg.RoleId)
 					//回送给每个战斗成员
 					players := battle.GetBattleMember()

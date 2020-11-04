@@ -28,4 +28,6 @@ type ServerEquipData struct {
 	ItemType EItemType
 	ApplyType EEquipApplyType
 	SellGold int32
+	PlayerType int32
+	GuanFang bool
 }

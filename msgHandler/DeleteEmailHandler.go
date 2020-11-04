@@ -16,13 +16,15 @@ func (handler *DeleteEmailHandler) Action(session network.SocketSessionInterface
 		if protoMsg, ok := innerMsg.MsgData.(*message.C2M2C_DeleteEmail); ok {
 			role := handler.GameServer.GetRoleManager().GetOnlineRole(innerMsg.RoleId)
 			if role != nil {
-				email,index := role.GetEmail(protoMsg.EmailId)
-				if email == nil{
+				email := role.GetEmailByIndex(int(protoMsg.EmailIndex))
+				if &email == nil{
 					return
 				}
-				role.DeleteEmail(index)
-				//回送
-				handler.GameServer.WriteInnerMsg(role.GetGateSession(), role.GetRoleId(), 5050, protoMsg)
+				if role.DeleteEmail(int(protoMsg.EmailIndex)){
+					protoMsg.EmailIndex = protoMsg.EmailIndex
+					//回送
+					handler.GameServer.WriteInnerMsg(role.GetGateSession(), role.GetRoleId(), 5050, protoMsg)
+				}
 			} else {
 				log4g.Errorf("不存在RoleId:%d", innerMsg.RoleId)
 			}

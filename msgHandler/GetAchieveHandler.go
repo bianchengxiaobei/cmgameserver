@@ -5,6 +5,8 @@ import (
 	"github.com/bianchengxiaobei/cmgo/network"
 	"cmgameserver/message"
 	"github.com/bianchengxiaobei/cmgo/log4g"
+	"time"
+	"cmgameserver/bean"
 )
 
 type GetAchieveHandler struct {
@@ -19,7 +21,23 @@ func (handler *GetAchieveHandler) Action(session network.SocketSessionInterface,
 				//通过配置文件读取
 				//然后加入角色已经领取的列表
 				if role.AddGetAchieveAward(protoMsg.AchievenId){
-
+					config := handler.GameServer.GetAchieveConfig()
+					data := config.Achieves[protoMsg.AchievenId]
+					for k,v := range data.Award{
+						if k == bean.Gold{
+							role.AddGold(int32(v))
+						}else if k == bean.Exp{
+							handler.GameServer.GetRoleManager().AddRoleExp(role,int32(v))
+						}else if k == bean.Diam{
+							role.AddDiam(int32(v))
+						}else if k == bean.ItemType{
+							//宝箱,增加到背包
+							time := time.Now().Unix()
+							role.AddItemNoMsg(int32(v),int32(time), time,false)
+						}
+					}
+					//回送
+					handler.GameServer.WriteInnerMsg(role.GetGateSession(), role.GetRoleId(), 5036, protoMsg)
 				}
 			} else {
 				log4g.Errorf("不存在RoleId:%d", innerMsg.RoleId)

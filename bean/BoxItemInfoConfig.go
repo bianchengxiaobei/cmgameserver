@@ -14,4 +14,5 @@ const (
 	Green
 	Blue
 	Orange
+	ZiSe
 )

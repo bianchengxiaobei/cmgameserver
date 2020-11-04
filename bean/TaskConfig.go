@@ -1,8 +1,5 @@
 package bean
 
-type TaskConfig struct {
-	Tasks map[int32]TaskConfigData
-}
 type AwardType int
 const (
 	Gold AwardType = iota
@@ -10,6 +7,9 @@ const (
 	Diam
 	ItemType
 )
+type TaskConfig struct {
+	Tasks map[int32]TaskConfigData
+}
 type TaskConfigData struct {
 	TaskId	int32
 	Award map[AwardType]int

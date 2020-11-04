@@ -2,6 +2,15 @@ package face
 
 import "cmgameserver/message"
 
+type BattleType int32
+
+const(
+	SimulateBattleType BattleType = 0
+	BattleBattleType BattleType = 1
+	PaiWeiBattleType BattleType = 2
+	FreeRoomBattleType BattleType = 3
+)
+
 type IRoom interface {
 	GetRoomName() string
 	SetRoomName(name string)
@@ -23,9 +32,11 @@ type IRoom interface {
 	SetRoomOwnerGroupId(id int32)
 	SetRoomOwnerCityId(city int32)
 	GetRoomOwnerCityId() int32
+	GetRoomOwnerLevel()int32
 	GetRoomOwnerName()string
 	CheckRoomReady() bool
 	SetRoomMemberReady(ready bool, roleId int64) bool
+	SetRoomMemberCityId(cityId int32,roleId int64)bool
 	IsRoomOwner(roleId int64) bool
 	SetIsWarFow(value bool)
 	GetIsWarFow() bool

@@ -7,6 +7,7 @@ type RankListItem struct {
 	RankLevel int32
 	NickName string
 	Value int32
+	RoleId int64
 } 
 
 func (this RankListItem)ToMessageData() *message.RankListItem{

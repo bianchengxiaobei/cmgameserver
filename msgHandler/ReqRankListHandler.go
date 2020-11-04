@@ -46,7 +46,7 @@ func (handler *ReqRankListHandler) Action(session network.SocketSessionInterface
 					log4g.Errorf("更新HeroCount出错[%s],RoleId:%d", err.Error(), innerMsg.RoleId)
 					return
 				}
-				handler.UpdateRoleHeroRankList(allRole)
+				handler.UpdateRoleHeroCountList(allRole)
 				err = c.Find(nil).Sort("-level").Limit(30).All(&allRole)
 				if err != nil {
 					log4g.Errorf("更新Level出错[%s],RoleId:%d", err.Error(), innerMsg.RoleId)
@@ -63,6 +63,9 @@ func (handler *ReqRankListHandler) Action(session network.SocketSessionInterface
 				items := handler.GameServer.GetRankLevelRankList()
 				for _,v := range items{
 					if &v != nil && v.NickName != ""{
+						if v.RoleId == innerMsg.RoleId{
+							returnMsg.MySortOrder = v.RankNum
+						}
 						messageItem := v.ToMessageData()
 						returnMsg.RankListItem = append(returnMsg.RankListItem, messageItem)
 					}
@@ -72,6 +75,9 @@ func (handler *ReqRankListHandler) Action(session network.SocketSessionInterface
 				items := handler.GameServer.GetRoleHeroCountRankList()
 				for _,v := range items{
 					if &v != nil && v.NickName != ""{
+						if v.RoleId == innerMsg.RoleId{
+							returnMsg.MySortOrder = v.RankNum
+						}
 						messageItem := v.ToMessageData()
 						returnMsg.RankListItem = append(returnMsg.RankListItem, messageItem)
 					}
@@ -81,6 +87,9 @@ func (handler *ReqRankListHandler) Action(session network.SocketSessionInterface
 				items := handler.GameServer.GetRoleLevelRankList()
 				for _,v := range items{
 					if &v != nil && v.NickName != ""{
+						if v.RoleId == innerMsg.RoleId{
+							returnMsg.MySortOrder = v.RankNum
+						}
 						messageItem := v.ToMessageData()
 						returnMsg.RankListItem = append(returnMsg.RankListItem, messageItem)
 					}
@@ -100,18 +109,20 @@ func (handler *ReqRankListHandler)UpdateRankLevelRankList(allRoles []bean.Role){
 				item.NickName = v.NickName
 				item.Value = v.RankScore
 				item.RankLevel = v.RankScore
+				item.RoleId = v.RoleId
 			}else {
 				item = new(bean.RankListItem)
 				item.RankNum = int32(k + 1)
 				item.NickName = v.NickName
 				item.Value = v.RankScore
 				item.RankLevel = v.RankScore
+				item.RoleId = v.RoleId
 				rankList[k] = *item
 			}
 		}
 	}
 }
-func (handler *ReqRankListHandler)UpdateRoleHeroRankList(allRoles []bean.Role){
+func (handler *ReqRankListHandler) UpdateRoleHeroCountList(allRoles []bean.Role){
 	rankList := handler.GameServer.GetRoleHeroCountRankList()
 	for k,v := range allRoles {
 		if &v != nil{
@@ -120,6 +131,7 @@ func (handler *ReqRankListHandler)UpdateRoleHeroRankList(allRoles []bean.Role){
 				item.RankNum = int32(k + 1)
 				item.NickName = v.NickName
 				item.Value = v.HeroCount
+				item.RoleId = v.RoleId
 				item.RankLevel = v.RankScore
 			}else {
 				item = new(bean.RankListItem)
@@ -127,6 +139,7 @@ func (handler *ReqRankListHandler)UpdateRoleHeroRankList(allRoles []bean.Role){
 				item.NickName = v.NickName
 				item.Value = v.HeroCount
 				item.RankLevel = v.RankScore
+				item.RoleId = v.RoleId
 				rankList[k] = *item
 			}
 		}
@@ -142,12 +155,14 @@ func (handler *ReqRankListHandler)UpdateRoleLevelRankList(allRoles []bean.Role){
 				item.NickName = v.NickName
 				item.Value = v.Level
 				item.RankLevel = v.RankScore
+				item.RoleId = v.RoleId
 			}else {
 				item = new(bean.RankListItem)
 				item.RankNum = int32(k + 1)
 				item.NickName = v.NickName
 				item.Value = v.Level
 				item.RankLevel = v.RankScore
+				item.RoleId = v.RoleId
 				rankList[k] = *item
 			}
 		}

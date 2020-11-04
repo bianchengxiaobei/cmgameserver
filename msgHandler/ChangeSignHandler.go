@@ -4,7 +4,6 @@ import (
 	"cmgameserver/face"
 	"github.com/bianchengxiaobei/cmgo/network"
 	"cmgameserver/message"
-	"gopkg.in/mgo.v2/bson"
 	"github.com/bianchengxiaobei/cmgo/log4g"
 )
 
@@ -18,21 +17,20 @@ func (handler *ChangeSignHandler) Action(session network.SocketSessionInterface,
 			role := handler.GameServer.GetRoleManager().GetOnlineRole(innerMsg.RoleId)
 			if role != nil {
 				role.SetSign(protoMsg.Sign)
-				dbSession := handler.GameServer.GetDBManager().Get()
-				if dbSession != nil {
-					//更新角色昵称
-					c := dbSession.DB("sanguozhizhan").C("Role")
-					data := bson.M{"$set": bson.M{"sign": protoMsg.Sign}}
-					err := c.Update(bson.M{"roleid": innerMsg.RoleId}, data)
-					msg := new(message.M2C_ChangeSignResult)
-					if err != nil {
-						log4g.Errorf("更新Sign出错[%s],RoleId:%d", err.Error(), innerMsg.RoleId)
-						msg.ErrorCode = 0
-					}else{
-						msg.ErrorCode = 1;
-					}
-					handler.GameServer.WriteInnerMsg(role.GetGateSession(), role.GetRoleId(), 5024, msg)
-				}
+				msg := new(message.M2C_ChangeSignResult)
+				msg.ErrorCode = 1
+				handler.GameServer.WriteInnerMsg(role.GetGateSession(), role.GetRoleId(), 5043, msg)
+				//dbSession := handler.GameServer.GetDBManager().Get()
+				//if dbSession != nil {
+				//	//更新角色昵称
+				//	c := dbSession.DB("sanguozhizhan").C("Role")
+				//	data := bson.M{"$set": bson.M{"sign": protoMsg.Sign}}
+				//	err := c.Update(bson.M{"roleid": innerMsg.RoleId}, data)
+				//	if err != nil {
+				//		log4g.Errorf("更新Sign出错[%s],RoleId:%d", err.Error(), innerMsg.RoleId)
+				//		msg.ErrorCode = 0
+				//	}
+				//}
 			} else {
 				log4g.Errorf("不存在RoleId:%d", innerMsg.RoleId)
 			}

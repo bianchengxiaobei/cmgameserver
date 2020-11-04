@@ -4,6 +4,7 @@ import (
 	"cmgameserver/face"
 	"cmgameserver/message"
 	"github.com/bianchengxiaobei/cmgo/network"
+	"github.com/bianchengxiaobei/cmgo/log4g"
 )
 
 type ReqStartBattleHandler struct {
@@ -34,8 +35,9 @@ func (handler *ReqStartBattleHandler) Action(session network.SocketSessionInterf
 						for _,v := range allRoomRoles{
 							if v > 0{
 								role := handler.GameServer.GetRoleManager().GetOnlineRole(v)
-								role.SetInRooming(false)
-								role.SetInBattling(true)
+								log4g.Info("进入战斗")
+								//role.SetInRooming(false)
+								//role.SetInBattling(true)
 								if role != nil && role.IsConnected(){
 									handler.GameServer.WriteInnerMsg(role.GetGateSession(),v,5009,rMsg)
 								}

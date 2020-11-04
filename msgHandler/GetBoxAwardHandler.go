@@ -23,7 +23,7 @@ func (handler *GetBoxAwardHandler) Action(session network.SocketSessionInterface
 				if boxItem.ItemId == 0{
 					return
 				}
-				items := handler.GetBoxEquipQuality(int(boxItem.ItemSeed),boxItem.ItemId,role)
+				items,notifyId := handler.GetBoxEquipQuality(int(boxItem.ItemSeed),boxItem.ItemId,role)
 				if items == nil{
 					return
 				}
@@ -36,6 +36,11 @@ func (handler *GetBoxAwardHandler) Action(session network.SocketSessionInterface
 						returnMsg.ItemList = append(returnMsg.ItemList, &v)
 						//log4g.Infof("item:[%d]",v.ItemId)
 					}
+				}
+				//向全服发送取得该物品
+				if notifyId > 0{
+					//说明得到的是传奇以上的装备,通知全服玩家
+					handler.GameServer.GetRoleManager().SendRollInfoToAllRoleGetItem(notifyId,role.GetNickName())
 				}
 				//设置宝箱消失
 				boxItem.ItemId = 0
@@ -54,15 +59,17 @@ func (handler *GetBoxAwardHandler) Action(session network.SocketSessionInterface
 		}
 	}
 }
-func (handler *GetBoxAwardHandler)GetBoxEquipQuality(seed int, boxItemId int32,onlineRole face.IOnlineRole) []message.Item{
+func (handler *GetBoxAwardHandler)GetBoxEquipQuality(seed int, boxItemId int32,onlineRole face.IOnlineRole) ([]message.Item,int32){
 	var boxChange [4]int
 	var qulity bean.EItemQuality
+	var notifyId int32
+	notifyId = -1
 	returnMsg := make([]message.Item,0)
 	random := tsrandom.New(seed)
 	boxList := handler.GameServer.GetBoxItemInfoConfig().BoxList
 	box := boxList[boxItemId]
 	if &box == nil{
-		return nil
+		return nil,notifyId
 	}
 	boxQuality := box.Quality
 	has := false
@@ -75,7 +82,7 @@ func (handler *GetBoxAwardHandler)GetBoxEquipQuality(seed int, boxItemId int32,o
 		}
 	}
 	if has == false{
-		return nil
+		return nil,notifyId
 	}
 	value := 0
 	for i := 0; i < len(boxChange); i++{
@@ -106,8 +113,16 @@ func (handler *GetBoxAwardHandler)GetBoxEquipQuality(seed int, boxItemId int32,o
 	if soldier == false{
 		data := handler.GameServer.GetHeroQualityEquipConfig().Data
 		all := data[qulity]
+		Get:
 		index := random.RangeInt(0,len(all))
-		equipId := int32(all[index].ItemId)
+		//如果是官方重新获取
+		if all[index].GuanFang{
+			goto Get
+		}
+		equipId := all[index].ItemId
+		if qulity == bean.Orange{
+			notifyId = equipId
+		}
 		item := &message.Item{
 			ItemId:equipId,
 			ItemSeed:int32(seed),
@@ -117,11 +132,35 @@ func (handler *GetBoxAwardHandler)GetBoxEquipQuality(seed int, boxItemId int32,o
 		itemIndex := onlineRole.AddItem(*item,false)
 		item.Index = itemIndex
 		returnMsg = append(returnMsg,*item)
+		//如果是紫色宝箱，必得紫色装备
+		if boxItemId == 200010{
+			ziseAll := data[bean.ZiSe]
+			ziseIndex := random.RangeInt(0,len(ziseAll))
+			ziseId := ziseAll[ziseIndex].ItemId
+			notifyId = ziseId
+			ziseItem := &message.Item{
+				ItemId:ziseId,
+				ItemSeed:int32(seed),
+				ItemNum:1,
+				ItemTime:nowTime,
+			}
+			ziseItem.Index = onlineRole.AddItem(*ziseItem,false)
+			returnMsg = append(returnMsg,*ziseItem)
+		}
 	}else{
 		data := handler.GameServer.GetSoldierQualityEquipConfig().Data
 		all := data[qulity]
+		HeroStart:
 		index := random.RangeInt(0,len(all))
-		equipId := int32(all[index].ItemId)
+		equipId := all[index].ItemId
+		//如果是官方重新获取
+		if handler.IsGuangFangId(equipId){
+			goto HeroStart
+		}
+		//如果是传奇装备的话，就通知
+		if qulity == bean.Orange{
+			notifyId = equipId
+		}
 		item := &message.Item{
 			ItemId:equipId,
 			ItemSeed:int32(seed),
@@ -131,6 +170,30 @@ func (handler *GetBoxAwardHandler)GetBoxEquipQuality(seed int, boxItemId int32,o
 		itemIndex := onlineRole.AddItem(*item,false)
 		item.Index = itemIndex
 		returnMsg = append(returnMsg,*item)
+		//如果是紫色宝箱，必得紫色装备
+		if boxItemId == 200010{
+			ziseAll := data[bean.ZiSe]
+			ziseIndex := random.RangeInt(0,len(ziseAll))
+			ziseId := ziseAll[ziseIndex].ItemId
+			notifyId = ziseId
+			ziseItem := &message.Item{
+				ItemId:ziseId,
+				ItemSeed:int32(seed),
+				ItemNum:1,
+				ItemTime:nowTime,
+			}
+			ziseItem.Index = onlineRole.AddItem(*ziseItem,false)
+			returnMsg = append(returnMsg,*ziseItem)
+		}
 	}
-	return returnMsg
+	return returnMsg,notifyId
+}
+func (handler *GetBoxAwardHandler)IsGuangFangId(id int32)bool{
+	if id == 1 || id == 2001 || id == 4001 ||
+		id == 5001 || id == 7001 || id == 8001{
+		//如果是官方的装备
+		return true
+	}else{
+		return false
+	}
 }

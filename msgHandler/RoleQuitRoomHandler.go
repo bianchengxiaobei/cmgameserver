@@ -17,6 +17,7 @@ func (handler *RoleQuitRoomHandler) Action(session network.SocketSessionInterfac
 			role := handler.GameServer.GetRoleManager().GetOnlineRole(innerMsg.RoleId)
 			if role.IsInBattling(){
 				//如果在战斗中就不退出
+				log4g.Infof("玩家[%d]战斗中就不退出!",innerMsg.RoleId)
 				return
 			}
 			roomManager := handler.GameServer.GetRoomManager()
@@ -24,6 +25,10 @@ func (handler *RoleQuitRoomHandler) Action(session network.SocketSessionInterfac
 			room := roomManager.GetRoomByRoomId(roomId)
 			if room != nil{
 				//如果是房主退出就地解散
+				if room.GetInBattle(){
+					log4g.Infof("房间在[%d]战斗中就不退出!",roomId)
+					return
+				}
 				if room.IsRoomOwner(role.GetRoleId()){
 					if roomManager.DeleteRoom(roomId){
 						log4g.Infof("删除房间[%d]成功!",roomId)

@@ -1,15 +1,16 @@
 package face
 
 import (
-	"github.com/bianchengxiaobei/cmgo/network"
 	"cmgameserver/bean"
-	"github.com/bianchengxiaobei/cmgo/db"
-	"time"
 	"cmgameserver/message"
+	"github.com/bianchengxiaobei/cmgo/db"
+	"github.com/bianchengxiaobei/cmgo/network"
+	"time"
 )
 
+
 type IOnlineRole interface {
-	GetRole()*bean.Role
+	GetRole() *bean.Role
 	SetGateSession(session network.SocketSessionInterface)
 	GetGateSession() network.SocketSessionInterface
 	GetRoleId() int64
@@ -21,12 +22,15 @@ type IOnlineRole interface {
 	SetServerId(int32)
 	SetUserId(int64)
 	SetUseName(string)
+	GetSaiJiId()int32
+	SetSaiJiId(id int32)
 	SetGateId(int32)
-	GetAllEmail()*[]bean.Email
 	GetNickName() string
 	SetNickName(nickName string)
 	GetRoomId() int32
 	SetRoomId(roomId int32)
+	SetBattleSeed(seed int32)
+	GetBattleSeed()int32
 	GetLevel() int32
 	SetLevel(level int32)
 	GetDiam() int32
@@ -42,45 +46,98 @@ type IOnlineRole interface {
 	SetConnected(conn bool)
 	IsLoadFinished() bool
 	SetLoadFinished(finished bool)
-	GetPingTime()time.Time
+	GetPingTime() time.Time
 	SetPingTime(time time.Time)
 	IsInBattling() bool
 	SetInBattling(value bool)
 	IsInRooming() bool
 	SetInRooming(value bool)
+	GetLoginTime()time.Time
+	GetOnlineDiam() int32
+	SetOnlineDiam(value int32)
+	SetLoginTime(time time.Time)
 	GetBattleId() int32
 	SetBattleId(id int32)
-	GetAgreePause()bool
+	GetAgreePause() bool
 	SetAgreePause(agree bool)
-	GetSex()int32
+	GetSex() int32
 	SetSex(sex int32)
 	SetSign(sign string)
 	GetSign() string
-	GetMaxBagNum() int32
-	SetMaxBagNum(num int32)
+	GetMaxBagNum() int
+	GetMaxEmailNum() int
+	GetCurMaxEmailNum()int
+	DeleteEmailReally()
+	SetMaxBagNum(num int)
+	SetMaxEmailNum(num int)
 	AddGold(gold int32)
-	AddExp(exp int32)
+	AddExp(exp int32)(bool,int32)
+	AddDiam(diam int32)
+	GetMailAddresss() string
+	SetMailAddresss(address string)
+	GetQQ() int32
+	SetQQ(qq int32)
+	GetWeiXin() string
+	SetWeiXin(weixin string)
+	GetPhone() int32
+	SetPhone(phone int32)
 	UpdateNextExp()
-	AddHeroExp(heroId int32, exp int32) (int32,bool)
+	UpgradeHeroLevel(heroId int32) (level int32,skillPoint int32,value bool)
 	//HasHero(heroId int32) bool
 	GetItem(index int32) bean.Item
-	SetItem(index int32,item bean.Item)
-	AddItem (item message.Item,hasNum bool)int32
-	AddItemNoMsg(itemId int32,itemSeed int32,itemTime int64,hasNum bool)int32
-	GetHero(heroId int32)*bean.Hero
+	SetItem(index int32, item bean.Item)
+	DeleteItem(index int32)
+	AddItem(item message.Item, hasNum bool) int32
+	AddItemNoMsg(itemId int32, itemSeed int32, itemTime int64, hasNum bool) int32
+
+	GetHero(heroId int32) *bean.Hero
+	SetHero(hero bean.Hero)
+	AddHero(hero bean.Hero)
+	SetHeroCount(count int32)
 	UpdateDB(manager *db.MongoBDManager)
 	QuitBattle()
-	BuyHero(heroId int32) bool
-	WinLevel(level int32)
+	BuyHero(heroId int32,buyType int32) bool
+	WinLevel(level int32)bool
 	AddGetTaskAward(taskId int32) bool
 	AddGetAchieveAward(achieveId int32) bool
-	GetSignAward()bool
-	GetTaskSeed()int32
+	GetSignAward() bool
+	GetTaskSeed() int32
 	GetSoldierData(index int) *message.FreeSoldierData
-	ChangeFreeSoldierData(index int,data message.FreeSoldierData)bool
-	ChangeFreeSoldierEquipId(index int, equipIndex int, equipId int32)
-	GetFreeSoldierEquipId(index int, equipIndex int)int32
-	GetFreeSoldierGuangFanEquipId(index int, equipIndex int) (int32,bool)
-	GetEmail(emailId int32)(*bean.Email,int)
-	DeleteEmail(index int)
+	GetDunJiaSoldierData()*[]*message.FreeSoldierData
+	GetBuJiaSoldierData()*[]*message.FreeSoldierData
+	ChangeFreeSoldierData(index int, data message.FreeSoldierData) bool
+	ChangeFreeSoldierEquipId(index int, equipIndex int, equipId int32,carryType int32)
+	GetFreeSoldierEquipId(index int, equipIndex int) int32
+	GetFreeSoldierGuangFanEquipId(index int, equipIndex int) (int32, bool)
+	//GetEmail(emailId int32) (*bean.Email, int32)
+	GetEmailByIndex(index int)bean.Email
+	SetEmail(emailIndex int,get bool)bool
+	DeleteEmail(index int)bool
+	AddEmail(email bean.Email)int32
+	AddEmptyEmail(index int)
+	GetMatchPlayer()IMatchPlayer
+	GetRankScore()int32
+	AddRankScore(value int32)int32
+	GetAchieveMsgData()*message.AchievementData
+	SetAchieveRecord(data *message.AchievementData)
+	BuyCard(cardType bean.CardType)bool//购买月卡
+	BuyDiam(diamType bean.DiamType)//购买钻石
+	GetDayTaskIdList() []int32
+	HasGetAchievementId()[]int32
+	GetCardIds()*[]int32
+	GetCards()*[]bean.Card
+	SetCard(card bean.Card,index int)
+	AddCardDayGetDiam(add int32)
+	GetCardDayGetDiam()int32
+	SetCardDayGetDiam(value int32)
+	DeleteCard(index int)
+	GetIsGM()bool//是否是游戏管理员
+	AddTran(tran bean.Tran)
+	RemoveTran(tranId string)(bool,bean.TranType,int32)
+	DoNoCompleteTran()
+	GetGuideFinised()bool
+	SetGuideFinised(value bool)
+	GetGiftCode(code string)bool
+	GetInSimulateBattle()bool
+	SetInSimulateBattle(bValue bool)
 }

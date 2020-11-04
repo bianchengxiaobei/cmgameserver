@@ -30,7 +30,7 @@ func (handler *UseItemHandler) Action(session network.SocketSessionInterface, ms
 							role.AddGold(value)
 						}else if materialData.MatType == bean.EExp{
 							value := int32(materialData.MatValue * int(itemNum))
-							role.AddExp(value)
+							handler.GameServer.GetRoleManager().AddRoleExp(role,value)
 						}
 					}else{
 						//log4g.Infof("没有该物品：[%d]",item.ItemId)

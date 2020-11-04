@@ -17,6 +17,7 @@ type Room struct {
 	RoomOwnerAvatarId  int32
 	RoomOwnerName	string
 	RoomOwnerCityId   int32
+	RoomOwnerLevel    int32
 	GameType	int32
 	RoomMaxPlayerNum	int32
 	Password			string
@@ -105,6 +106,9 @@ func (room *Room)GetRoomOwnerGroupId() int32{
 func (room *Room)SetRoomOwnerGroupId(id int32){
 	room.RoomOwnerGroupId = id
 }
+func (room *Room)GetRoomOwnerLevel()int32{
+	return room.RoomOwnerLevel
+}
 func (room *Room)GetRoomOwnerName()string{
 	return room.RoomOwnerName
 }
@@ -136,9 +140,19 @@ func (room *Room)GetFashiData() *message.FreeSoldierData{
 func (room *Room) JoinOneMember(roleId int64) (int32,bool){
 	room.Lock()
 	defer room.Unlock()
-	//if room.GetCurPlayerNum() > 4{
-	//	return -1,false
-	//}
+	//判断是否已经在房间中(房主)
+	if room.RoomOwnerId == roleId{
+		return -1,false
+	}
+	oNum := len(room.RoomMembers)
+	if oNum >= int(room.RoomMaxPlayerNum - 1){
+		return -1,false
+	}
+	//如果已经在战斗中，就不能加入
+	if room.InBattle{
+		log4g.Infof("房间在战斗中")
+		return -1,false
+	}
 	if room.RoomMembers[roleId] == nil{
 		member := &RoomMember{
 			RoleId:roleId,
@@ -211,7 +225,7 @@ func (room *Room)SetInBattle(value bool){
 //取得随机id
 func (room *Room)getRandomId() int32{
 	Random:
-	randomIndex := rand.Int31n(5)
+	randomIndex := rand.Int31n(6)
 	if room.GroupIdPool[randomIndex] == -1{
 		goto Random
 	}else{
@@ -242,6 +256,18 @@ func (room *Room)SetRoomMemberReady(ready bool,roleId int64) bool{
 	member := room.RoomMembers[roleId]
 	if member != nil && member.Prepare != ready{
 		member.Prepare = ready
+		return true
+	}else{
+		return false
+	}
+}
+//设置房间内玩家城市id
+func (room *Room)SetRoomMemberCityId(cityId int32,roleId int64) bool{
+	room.Lock()
+	defer room.Unlock()
+	member := room.RoomMembers[roleId]
+	if member != nil{
+		member.CityId = cityId
 		return true
 	}else{
 		return false

@@ -7,6 +7,7 @@ import (
 	"github.com/bianchengxiaobei/cmgo/network"
 	"cmgameserver/message"
 	"time"
+	"fmt"
 )
 
 type ServerMessageHandler struct {
@@ -19,6 +20,8 @@ func (handler ServerMessageHandler) Init() {
 	handler.pool.Register(10001, &msgHandler.LoginToGameServerHandler{GameServer: handler.gameServer})
 	handler.pool.Register(10003,&msgHandler.RoleRegisterGateHandler{GameServer:handler.gameServer})
 	handler.pool.Register(10004,&msgHandler.RoleQuitHandler{GameServer:handler.gameServer})
+
+	handler.pool.Register(100001,&msgHandler.GMCommandHandler{GameServer:handler.gameServer})
 
 	handler.pool.Register(5001,&msgHandler.ReqRefreshRoomListHandle{GameServer:handler.gameServer})
 	handler.pool.Register(5003,&msgHandler.CreateRoomHandler{GameServer:handler.gameServer})
@@ -53,8 +56,42 @@ func (handler ServerMessageHandler) Init() {
 	handler.pool.Register(5054,&msgHandler.ReqPauseBattleHandler{GameServer:handler.gameServer})
 	handler.pool.Register(5055,&msgHandler.AgreePauseBattleHandler{GameServer:handler.gameServer})
 	handler.pool.Register(5058,&msgHandler.ReqRankListHandler{GameServer:handler.gameServer})
+	handler.pool.Register(5061,&msgHandler.BindZhangHaoHandler{GameServer:handler.gameServer})
+	handler.pool.Register(5062,&msgHandler.AutoMatchHandler{GameServer:handler.gameServer})
+	handler.pool.Register(5066,&msgHandler.RoleQuitMatchTeamHandler{GameServer:handler.gameServer})
+	handler.pool.Register(5068,&msgHandler.TeamStartMatchHandler{GameServer:handler.gameServer})
+	handler.pool.Register(5069,&msgHandler.MatchRoomPrepareHandler{GameServer:handler.gameServer})
+	handler.pool.Register(5072,&msgHandler.PaiWeiLoadFinishedHandler{GameServer:handler.gameServer})
+	handler.pool.Register(5073,&msgHandler.CancelStartMatchHandler{GameServer:handler.gameServer})
+	handler.pool.Register(5076,&msgHandler.UpdateAchieveDataHandler{GameServer:handler.gameServer})
+	handler.pool.Register(5077,&msgHandler.BuyShopEquipHandler{GameServer:handler.gameServer})
+	handler.pool.Register(5080,&msgHandler.BuyShopDiamHandler{GameServer:handler.gameServer})
+	handler.pool.Register(5082,&msgHandler.CheckBuyDiamHandler{GameServer:handler.gameServer})
+	handler.pool.Register(5083,&msgHandler.BuyShopCardHandler{GameServer:handler.gameServer})
+	handler.pool.Register(5084,&msgHandler.CheckBuyCardHandler{GameServer:handler.gameServer})
+	handler.pool.Register(5085,&msgHandler.CompleteGuideHandler{GameServer:handler.gameServer})
+	handler.pool.Register(5086,&msgHandler.BuyShopBoxHandler{GameServer:handler.gameServer})
+	handler.pool.Register(5088,&msgHandler.BuyShopHeroCardHandler{GameServer:handler.gameServer})
+	handler.pool.Register(5090,&msgHandler.UpgradeHeroLevelHandler{GameServer:handler.gameServer})
+	handler.pool.Register(5092,&msgHandler.QuickGetAllNoReadEmailHandler{GameServer:handler.gameServer})
+	handler.pool.Register(5094,&msgHandler.DeleteAllReadEmailHandler{GameServer:handler.gameServer})
+	handler.pool.Register(5096,&msgHandler.DeleteBagItemHandler{GameServer:handler.gameServer})
+	handler.pool.Register(5097,&msgHandler.GetGiftHandler{GameServer:handler.gameServer})
+	handler.pool.Register(5099,&msgHandler.ChangeRoomCityIdHandler{GameServer:handler.gameServer})
+	handler.pool.Register(5100,&msgHandler.ReStartPauseBattleHandler{GameServer:handler.gameServer})
+	handler.pool.Register(5101,&msgHandler.ReqBattleBugHandler{GameServer:handler.gameServer})
+	handler.pool.Register(5103,&msgHandler.EnterBattleStateHandler{GameServer:handler.gameServer})
+	handler.pool.Register(5104,&msgHandler.InviteRoomHandler{GameServer:handler.gameServer})
+	handler.pool.Register(5106,&msgHandler.OnlinePlayerHandler{GameServer:handler.gameServer})
+	handler.pool.Register(5109,&msgHandler.ChangePasswordHandler{GameServer:handler.gameServer})
+	handler.pool.Register(5111,&msgHandler.CheckOnlineGetDiamHandler{GameServer:handler.gameServer})
 }
 func (handler ServerMessageHandler) MessageReceived(session network.SocketSessionInterface, message interface{}) error {
+	defer func() {
+		if err := recover(); err != nil {
+			fmt.Println(err)
+		}
+	}()
 	if writeMsg, ok := message.(network.WriteMessage); !ok {
 		return errors.New("不是WriteMessage类型")
 	} else {
@@ -91,8 +128,8 @@ func (handler ServerMessageHandler) SessionPeriod(session network.SocketSessionI
 		if connect{
 			es := time.Now().Sub(v.GetPingTime())
 			esTime := es.Seconds()
-			if esTime > 15{
-				log4g.Infof("[%d]超时关闭Session[%f]",k,esTime)
+			if esTime > 35{
+				//log4g.Infof("[%d]超时关闭Session[%f]",k,esTime)
 				v.SetConnected(false)
 				message := &message.M2G_CloseSession{}
 				message.RoleId = v.GetRoleId()

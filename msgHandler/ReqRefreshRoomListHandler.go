@@ -37,6 +37,7 @@ func (handler *ReqRefreshRoomListHandle) Action(session network.SocketSessionInt
 					room.Owner.MapId = v.GetMapId()
 					room.Owner.RoomOwnerGroupId = v.GetRoomOwnerGroupId()
 					room.Owner.RoomOwnerAvatarId = v.GetRoomOwnerAvatarId()
+					room.Owner.RoomOwnerLevel = v.GetRoomOwnerLevel()
 					room.Owner.CityId = v.GetRoomOwnerCityId()
 					room.Owner.IsWarFow = v.GetIsWarFow()
 					room.Owner.Arrower = v.GetArrowerData()

@@ -22,6 +22,8 @@ func (handler *ChangeSkillHandler) Action(session network.SocketSessionInterface
 					}else{
 						hero.Skill2 = protoMsg.SkillId
 					}
+					role.SetHero(*hero)
+					handler.GameServer.WriteInnerMsg(role.GetGateSession(),role.GetRoleId(),5035,protoMsg)
 				}
 			} else {
 				log4g.Errorf("不存在RoleId:%d", innerMsg.RoleId)

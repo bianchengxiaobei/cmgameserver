@@ -5,6 +5,7 @@ import (
 	"github.com/bianchengxiaobei/cmgo/network"
 	"cmgameserver/message"
 	"github.com/bianchengxiaobei/cmgo/log4g"
+	"cmgameserver/bean"
 )
 
 type ChangeFreeSoldierDataHandler struct {
@@ -15,6 +16,13 @@ func (handler *ChangeFreeSoldierDataHandler) Action(session network.SocketSessio
 		if protoMsg, ok := innerMsg.MsgData.(*message.C2M2C_ChangeFreeSoldierData); ok {
 			role := handler.GameServer.GetRoleManager().GetOnlineRole(innerMsg.RoleId)
 			if role != nil {
+				if soldierConfig,ok := handler.GameServer.GetSoldierItemIdEquipConfig().Data[protoMsg.Data.WeapId];ok{
+					if soldierConfig.ItemType == bean.Weap{
+						if soldierConfig.PlayerType != protoMsg.Data.PlayerType{
+							return
+						}
+					}
+				}
 				if role.ChangeFreeSoldierData(int(protoMsg.PlayerTypeIndex),*protoMsg.Data){
 					//回送
 					handler.GameServer.WriteInnerMsg(role.GetGateSession(), role.GetRoleId(), 5039, protoMsg)

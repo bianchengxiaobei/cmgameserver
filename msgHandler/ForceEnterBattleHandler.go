@@ -40,9 +40,9 @@ func (handler *ForceEnterBattleHandler) Action(session network.SocketSessionInte
 					}
 					battle := handler.GameServer.GetBattleManager().GetBattleInFree()
 					if battle != nil{
-						battle.ReStart(&roles)
+						battle.ReStart(&roles,face.FreeRoomBattleType)
 					}else{
-						battle := handler.GameServer.GetBattleManager().CreateBattle(&roles)
+						battle := handler.GameServer.GetBattleManager().CreateBattle(&roles,face.FreeRoomBattleType)
 						if battle != nil{
 							battle.Start()
 						}

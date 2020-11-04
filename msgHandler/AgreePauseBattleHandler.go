@@ -22,6 +22,7 @@ func (handler *AgreePauseBattleHandler) Action(session network.SocketSessionInte
 					//发送暂停消息
 					returnMsg := new(message.M2C_StartPause)
 					returnMsg.Pause = true
+					returnMsg.RoleId = battle.GetPauseRoleId()
 					for _,v := range battle.GetBattleMember(){
 						if v != nil && v.GetRoleId() > 0{
 							handler.GameServer.WriteInnerMsg(v.GetGateSession(),v.GetRoleId(),5056,returnMsg)
@@ -31,6 +32,7 @@ func (handler *AgreePauseBattleHandler) Action(session network.SocketSessionInte
 					//不能暂停
 					returnMsg := new(message.M2C_StartPause)
 					returnMsg.Pause = false
+					returnMsg.RoleId = battle.GetPauseRoleId()
 					for _,v := range battle.GetBattleMember(){
 						if v != nil && v.GetRoleId() > 0{
 							handler.GameServer.WriteInnerMsg(v.GetGateSession(),v.GetRoleId(),5056,returnMsg)
